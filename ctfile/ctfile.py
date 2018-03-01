@@ -17,15 +17,16 @@ class CTfile(OrderedDict):
     def __init__(self, lexer):
         """CTfile initializer.
         
-        :param lexer: 
+        :param lexer: instance of the `ctfile` tokenizer.
+        :type lexer: :func:`~ctfile.tokenizer.tokenizer`
         """
         super(CTfile, self).__init__()
         self.lexer = lexer
 
         this_directory = os.path.dirname(__file__)
-        template_path = "{}/conf/{}_template.json".format(this_directory, self.__class__.__name__)
+        template_path = '{}/conf/{}_template.json'.format(this_directory, self.__class__.__name__)
 
-        with open(template_path, "r") as infile:
+        with open(template_path, 'r') as infile:
             self.update(json.load(infile, object_pairs_hook=OrderedDict))
 
         self._build()
@@ -41,14 +42,13 @@ class CTfile(OrderedDict):
     def write(self, filehandle, file_format):
         """Write :class:`~ctfile.ctfile.CTfile` data into file. 
 
-        :param filehandle: file-like object.
+        :param filehandle: File-like object.
         :param str file_format: Format to use to write data: `ctfile` or `json`.
         :return: None.
         :rtype: :py:obj:`None`
         """
         try:
-            repr_str = self.writestr(file_format=file_format)
-            filehandle.write(repr_str)
+            filehandle.write(self.writestr(file_format=file_format))
         except IOError:
             raise IOError('"filehandle" parameter must be writable.')
 
@@ -67,22 +67,24 @@ class CTfile(OrderedDict):
             raise ValueError('Invalid "file_format": "{}"'.format(file_format))
         return repr_str
 
-    def _build(self):
-        """Build :class:`~ctfile.ctfile.CTfile`.
-
-        :return:
-        """
-        raise NotImplementedError("Abstract class")
-
     def print_file(self, file_format='ctfile', f=sys.stdout):
         """Print representation of :class:`~ctfile.ctfile.CTfile`.
 
         :param str file_format: Format to use: `ctfile` or `json`.
+        :param f: Print to file or stdout.
+        :type f: File-like 
         :return: None.
         :rtype: :py:obj:`None`
         """
-        repr_str = self.writestr(file_format=file_format)
-        print(repr_str, file=f)
+        print(self.writestr(file_format=file_format), file=f)
+
+    def _build(self):
+        """Build :class:`~ctfile.ctfile.CTfile` instance.
+
+        :return: :class:`~ctfile.ctfile.CTfile` instance.
+        :rtype: :class:`~ctfile.ctfile.CTfile`
+        """
+        raise NotImplementedError('Abstract class')
 
     def _to_json(self, sort_keys=False, indent=4):
         """Convert :class:`~ctfile.ctfile.CTfile` into JSON string.
@@ -93,12 +95,12 @@ class CTfile(OrderedDict):
         return json.dumps(self, sort_keys=sort_keys, indent=indent)
 
     def _to_ctfile(self):
-        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` string.
+        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
         
-        :return: CTfile string.
+        :return: `CTfile` formatted string.
         :rtype: :py:class:`str`
         """
-        raise NotImplementedError("Abstract class")
+        raise NotImplementedError('Abstract class')
 
     @staticmethod
     def _is_molfile_str(string):
@@ -200,58 +202,71 @@ class Ctab(CTfile):
         separate the M and XXX.
         The prefix: "M  END" terminates the properties block.
     """
-    counts_line_format = "aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv"
-    atom_block_format = "xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee"
-    bond_block_format = "111222tttsssxxxrrrccc"
+    counts_line_format = 'aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv'
+    atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
+    bond_block_format = '111222tttsssxxxrrrccc'
 
     def _build(self):
+        """Build :class:`~ctfile.ctfile.Ctab` instance.
+        
+        :return: :class:`~ctfile.ctfile.Ctab` instance.
+        :rtype: :class:`~ctfile.ctfile.Ctab`
+        """
         for token in self.lexer:
             key = token.__class__.__name__
 
-            if key == "CtabCountsLine":
+            if key == 'CtabCountsLine':
                 self[key].update(token._asdict())
 
-            elif key in ("CtabAtomBlock", "CtabBondBlock"):
+            elif key in ('CtabAtomBlock', 'CtabBondBlock'):
                 self[key].append(token._asdict())
 
-            elif key == "CtabPropertiesBlock":
+            elif key == 'CtabPropertiesBlock':
                 self[key].append(token._asdict())
+
+            else:
+                raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
 
     def _to_ctfile(self):
+        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
+
+        :return: `CTfile` formatted string.
+        :rtype: :py:class:`str`
+        """
         output = io.StringIO()
 
         for key in self:
 
-            if key == "CtabCountsLine":
+            if key == 'CtabCountsLine':
                 counter = OrderedCounter(self.counts_line_format)
                 counts_line = "".join([str(value).rjust(spacing) for value, spacing in zip(self[key].values(), counter.values())])
                 output.write(counts_line)
                 output.write("\n")
 
-            elif key == "CtabAtomBlock":
+            elif key == 'CtabAtomBlock':
                 counter = OrderedCounter(self.atom_block_format)
 
                 for i in self[key]:
-                    atom_line = "".join([str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
+                    atom_line = ''.join([str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
                     output.write(atom_line)
-                    output.write("\n")
+                    output.write('\n')
 
-            elif key == "CtabBondBlock":
+            elif key == 'CtabBondBlock':
                 counter = OrderedCounter(self.bond_block_format)
 
                 for i in self[key]:
-                    bond_line = "".join(
+                    bond_line = ''.join(
                         [str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
                     output.write(bond_line)
-                    output.write("\n")
+                    output.write('\n')
 
-            elif key == "CtabPropertiesBlock":
+            elif key == 'CtabPropertiesBlock':
                 for i in self[key]:
-                    output.write(i["property_line"])
-                    output.write("\n")
+                    output.write(i['property_line'])
+                    output.write('\n')
 
             else:
-                raise KeyError("Ctab object does not supposed to have any other keys.")
+                raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
 
         return output.getvalue()
 
@@ -271,40 +286,46 @@ class Molfile(CTfile):
     --------------------
     """
     def _build(self):
-        """
-        
-        :return: 
+        """Build :class:`~ctfile.ctfile.Molfile` instance.
+
+        :return: :class:`~ctfile.ctfile.Molfile` instance.
+        :rtype: :class:`~ctfile.ctfile.Molfile`
         """
         for token in self.lexer:
             key = token.__class__.__name__
 
-            if key == "HeaderBlock":
+            if key == 'HeaderBlock':
                 self[key].update(token._asdict())
 
-            elif key == "CtabBlock":
+            elif key == 'CtabBlock':
                 ctab = Ctab(lexer=self.lexer)
-                self["Ctab"] = ctab
+                self['Ctab'] = ctab
 
             else:
-                pass
+                raise KeyError('Molfile object does not supposed to have any other information: "{}".'.format(key))
+
+        return self
 
     def _to_ctfile(self):
-        """
-        
-        :return: 
+        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
+
+        :return: `CTfile` formatted string.
+        :rtype: :py:class:`str`
         """
         output = io.StringIO()
 
         for key in self:
-            if key == "HeaderBlock":
+            if key == 'HeaderBlock':
                 for line in self[key].values():
                     output.write(line)
-                    output.write("\n")
-            elif key == "Ctab":
+                    output.write('\n')
+
+            elif key == 'Ctab':
                 ctab_str = self[key]._to_ctfile()
                 output.write(ctab_str)
+
             else:
-                raise KeyError("Molfile object does not supposed to have any other keys.")
+                raise KeyError('Molfile object does not supposed to have any other information: "{}".'.format(key))
 
         return output.getvalue()
 
