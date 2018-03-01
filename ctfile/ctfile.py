@@ -12,12 +12,12 @@ from .utils import OrderedCounter
 
 
 class CTfile(OrderedDict):
-    """"""
+    """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
 
     def __init__(self, lexer):
         """CTfile initializer.
         
-        :param lexer: instance of the `ctfile` tokenizer.
+        :param lexer: instance of the ``CTfile`` format tokenizer.
         :type lexer: :func:`~ctfile.tokenizer.tokenizer`
         """
         super(CTfile, self).__init__()
@@ -43,7 +43,7 @@ class CTfile(OrderedDict):
         """Write :class:`~ctfile.ctfile.CTfile` data into file. 
 
         :param filehandle: File-like object.
-        :param str file_format: Format to use to write data: `ctfile` or `json`.
+        :param str file_format: Format to use to write data: ``ctfile`` or ``json``.
         :return: None.
         :rtype: :py:obj:`None`
         """
@@ -55,7 +55,7 @@ class CTfile(OrderedDict):
     def writestr(self, file_format):
         """Write :class:`~ctfile.ctfile.CTfile` data into string.
         
-        :param str file_format: Format to use to write data: `ctfile` or `json`.
+        :param str file_format: Format to use to write data: ``ctfile`` or ``json``.
         :return: String representing the :class:`~ctfile.ctfile.CTfile` instance.
         :rtype: :py:class:`str`
         """
@@ -64,13 +64,13 @@ class CTfile(OrderedDict):
         elif file_format == 'ctfile':
             repr_str = self._to_ctfile()
         else:
-            raise ValueError('Invalid "file_format": "{}"'.format(file_format))
+            raise ValueError('Invalid "file_format" argument: "{}"'.format(file_format))
         return repr_str
 
     def print_file(self, file_format='ctfile', f=sys.stdout):
         """Print representation of :class:`~ctfile.ctfile.CTfile`.
 
-        :param str file_format: Format to use: `ctfile` or `json`.
+        :param str file_format: Format to use: ``ctfile`` or ``json``.
         :param f: Print to file or stdout.
         :type f: File-like 
         :return: None.
@@ -84,12 +84,12 @@ class CTfile(OrderedDict):
         :return: :class:`~ctfile.ctfile.CTfile` instance.
         :rtype: :class:`~ctfile.ctfile.CTfile`
         """
-        raise NotImplementedError('Abstract class')
+        raise NotImplementedError('Subclass must implement abstract method')
 
     def _to_json(self, sort_keys=False, indent=4):
         """Convert :class:`~ctfile.ctfile.CTfile` into JSON string.
         
-        :return: JSON string.
+        :return: ``JSON`` formatted string.
         :rtype: :py:class:`str`
         """
         return json.dumps(self, sort_keys=sort_keys, indent=indent)
@@ -97,10 +97,10 @@ class CTfile(OrderedDict):
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
         
-        :return: `CTfile` formatted string.
+        :return: ``CTfile`` formatted string.
         :rtype: :py:class:`str`
         """
-        raise NotImplementedError('Abstract class')
+        raise NotImplementedError('Subclass must implement abstract method')
 
     @staticmethod
     def _is_molfile_str(string):
@@ -115,10 +115,12 @@ class CTfile(OrderedDict):
 
     @staticmethod
     def _is_sdfile_str(string):
-        """
+        """Test if input string is in ``SDfile`` format.
 
-        :param str string:
-        :return:
+        :param string: Input string.
+        :type string: :py:class:`str` or :py:class:`bytes`
+        :return: Input string if in ``SDfile`` format or False otherwise.
+        :rtype: :py:class:`str` or :py:obj:`False`
         """
         pass
 
@@ -239,7 +241,8 @@ class Ctab(CTfile):
 
             if key == 'CtabCountsLine':
                 counter = OrderedCounter(self.counts_line_format)
-                counts_line = "".join([str(value).rjust(spacing) for value, spacing in zip(self[key].values(), counter.values())])
+                counts_line = "".join([str(value).rjust(spacing) for value, spacing
+                                       in zip(self[key].values(), counter.values())])
                 output.write(counts_line)
                 output.write("\n")
 
@@ -247,7 +250,8 @@ class Ctab(CTfile):
                 counter = OrderedCounter(self.atom_block_format)
 
                 for i in self[key]:
-                    atom_line = ''.join([str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
+                    atom_line = ''.join([str(value).rjust(spacing) for value, spacing
+                                         in zip(i.values(), counter.values())])
                     output.write(atom_line)
                     output.write('\n')
 
@@ -255,8 +259,8 @@ class Ctab(CTfile):
                 counter = OrderedCounter(self.bond_block_format)
 
                 for i in self[key]:
-                    bond_line = ''.join(
-                        [str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
+                    bond_line = ''.join([str(value).rjust(spacing) for value, spacing
+                                         in zip(i.values(), counter.values())])
                     output.write(bond_line)
                     output.write('\n')
 
@@ -309,7 +313,7 @@ class Molfile(CTfile):
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
 
-        :return: `CTfile` formatted string.
+        :return: ``CTfile`` formatted string.
         :rtype: :py:class:`str`
         """
         output = io.StringIO()
