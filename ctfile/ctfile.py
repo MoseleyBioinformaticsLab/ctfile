@@ -2,8 +2,10 @@
 #  -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, unicode_literals
-import json
+import sys
 import os
+import json
+import io
 from collections import OrderedDict
 
 from .utils import OrderedCounter
@@ -37,28 +39,58 @@ class CTfile(OrderedDict):
         input_str = filehandle.read()
 
     def write(self, filehandle, file_format):
-        """
+        """Write :class:`~ctfile.ctfile.CTfile` data into file. 
 
-        :param filehandle:
-        :param file_format:
-        :return:
+        :param filehandle: file-like object.
+        :param str file_format: Format to use to write data: `ctfile` or `json`.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
-        raise NotImplementedError("Abstract class")
+        try:
+            repr_str = self.writestr(file_format=file_format)
+            filehandle.write(repr_str)
+        except IOError:
+            raise IOError('"filehandle" parameter must be writable.')
+
+    def writestr(self, file_format):
+        """Write :class:`~ctfile.ctfile.CTfile` data into string.
+        
+        :param str file_format: Format to use to write data: `ctfile` or `json`.
+        :return: String representing the :class:`~ctfile.ctfile.CTfile` instance.
+        :rtype: :py:class:`str`
+        """
+        if file_format == 'json':
+            repr_str = self._to_json()
+        elif file_format == 'ctfile':
+            repr_str = self._to_ctfile()
+        else:
+            raise ValueError('Invalid "file_format": "{}"'.format(file_format))
+        return repr_str
 
     def _build(self):
-        """
+        """Build :class:`~ctfile.ctfile.CTfile`.
 
         :return:
         """
         raise NotImplementedError("Abstract class")
 
-    def _to_json(self):
+    def print_file(self, file_format='ctfile', f=sys.stdout):
+        """Print representation of :class:`~ctfile.ctfile.CTfile`.
+
+        :param str file_format: Format to use: `ctfile` or `json`.
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        repr_str = self.writestr(file_format=file_format)
+        print(repr_str, file=f)
+
+    def _to_json(self, sort_keys=False, indent=4):
         """Convert :class:`~ctfile.ctfile.CTfile` into JSON string.
         
         :return: JSON string.
         :rtype: :py:class:`str`
         """
-        return json.dumps(self, sort_keys=False, indent=4)
+        return json.dumps(self, sort_keys=sort_keys, indent=indent)
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` string.
@@ -66,7 +98,7 @@ class CTfile(OrderedDict):
         :return: CTfile string.
         :rtype: :py:class:`str`
         """
-        pass
+        raise NotImplementedError("Abstract class")
 
     @staticmethod
     def _is_molfile_str(string):
@@ -185,44 +217,43 @@ class Ctab(CTfile):
             elif key == "CtabPropertiesBlock":
                 self[key].append(token._asdict())
 
-    def write(self, filehandle, file_format):
-        """
-        
-        :param filehandle: 
-        :param file_format: 
-        :return: 
-        """
+    def _to_ctfile(self):
+        output = io.StringIO()
+
         for key in self:
 
             if key == "CtabCountsLine":
                 counter = OrderedCounter(self.counts_line_format)
                 counts_line = "".join([str(value).rjust(spacing) for value, spacing in zip(self[key].values(), counter.values())])
-                filehandle.write(bytes(counts_line, "utf-8"))
-                filehandle.write(bytes("\n", "utf-8"))
+                output.write(counts_line)
+                output.write("\n")
 
             elif key == "CtabAtomBlock":
                 counter = OrderedCounter(self.atom_block_format)
 
                 for i in self[key]:
                     atom_line = "".join([str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
-                    filehandle.write(bytes(atom_line, "utf-8"))
-                    filehandle.write(bytes("\n", "utf-8"))
+                    output.write(atom_line)
+                    output.write("\n")
 
             elif key == "CtabBondBlock":
                 counter = OrderedCounter(self.bond_block_format)
 
                 for i in self[key]:
-                    bond_line = "".join([str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
-                    filehandle.write(bytes(bond_line, "utf-8"))
-                    filehandle.write(bytes("\n", "utf-8"))
+                    bond_line = "".join(
+                        [str(value).rjust(spacing) for value, spacing in zip(i.values(), counter.values())])
+                    output.write(bond_line)
+                    output.write("\n")
 
             elif key == "CtabPropertiesBlock":
                 for i in self[key]:
-                    filehandle.write(bytes(i["property_line"], "utf-8"))
-                    filehandle.write(bytes("\n", "utf-8"))
+                    output.write(i["property_line"])
+                    output.write("\n")
 
             else:
                 raise KeyError("Ctab object does not supposed to have any other keys.")
+
+        return output.getvalue()
 
 
 class Molfile(CTfile):
@@ -257,25 +288,25 @@ class Molfile(CTfile):
             else:
                 pass
 
-    def write(self, filehandle, file_format):
+    def _to_ctfile(self):
         """
         
-        :param filehandle: 
-        :param file_format: 
         :return: 
         """
-        for key in self:
+        output = io.StringIO()
 
+        for key in self:
             if key == "HeaderBlock":
                 for line in self[key].values():
-                    filehandle.write(bytes(line, "utf-8"))
-                    filehandle.write(bytes("\n", "utf-8"))
-
+                    output.write(line)
+                    output.write("\n")
             elif key == "Ctab":
-                self[key].write(fileahandle, file_format)
-
+                ctab_str = self[key]._to_ctfile()
+                output.write(ctab_str)
             else:
                 raise KeyError("Molfile object does not supposed to have any other keys.")
+
+        return output.getvalue()
 
 
 class SDfile(CTfile):
