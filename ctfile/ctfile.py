@@ -139,8 +139,8 @@ class Ctab(CTfile):
     |                  |
     | Counts line      |
     | Atom block       |
-    | Bon       |
-    | Propertd blockies block |
+    | Bond block       |
+    | Properties block |
     |                  |
     --------------------
     
@@ -246,10 +246,10 @@ class Ctab(CTfile):
 
             if key == 'CtabCountsLine':
                 counter = OrderedCounter(self.counts_line_format)
-                counts_line = "".join([str(value).rjust(spacing) for value, spacing
+                counts_line = ''.join([str(value).rjust(spacing) for value, spacing
                                        in zip(self[key].values(), counter.values())])
                 output.write(counts_line)
-                output.write("\n")
+                output.write('\n')
 
             elif key == 'CtabAtomBlock':
                 counter = OrderedCounter(self.atom_block_format)
@@ -270,9 +270,11 @@ class Ctab(CTfile):
                     output.write('\n')
 
             elif key == 'CtabPropertiesBlock':
-                for i in self[key]:
-                    output.write(i['property_line'])
-                    output.write('\n')
+                for property_name in self[key]:
+                    for property_line in self[key][property_name]:
+                        output.write(property_line)
+                        output.write('\n')
+                output.write('M  END\n')
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
