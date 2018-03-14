@@ -14,6 +14,12 @@ from .utils import OrderedCounter
 class CTfile(OrderedDict):
     """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
 
+    this_directory = os.path.abspath(os.path.dirname(__file__))
+    ctab_properties_path = '{}/conf/Ctab_properties.json'.format(this_directory)
+
+    with open(ctab_properties_path, 'r') as infile:
+        ctab_properties_conf = json.load(infile, object_pairs_hook=OrderedDict)
+
     def __init__(self, lexer):
         """CTfile initializer.
         
@@ -23,8 +29,7 @@ class CTfile(OrderedDict):
         super(CTfile, self).__init__()
         self.lexer = lexer
 
-        this_directory = os.path.dirname(__file__)
-        template_path = '{}/conf/{}_template.json'.format(this_directory, self.__class__.__name__)
+        template_path = '{}/conf/{}_template.json'.format(self.this_directory, self.__class__.__name__)
 
         with open(template_path, 'r') as infile:
             self.update(json.load(infile, object_pairs_hook=OrderedDict))
@@ -103,7 +108,7 @@ class CTfile(OrderedDict):
         raise NotImplementedError('Subclass must implement abstract method')
 
     @staticmethod
-    def _is_molfile_str(string):
+    def _is_molfile(string):
         """Test if input string is in ``Molfile`` format.
 
         :param string: Input string.
@@ -114,7 +119,7 @@ class CTfile(OrderedDict):
         pass
 
     @staticmethod
-    def _is_sdfile_str(string):
+    def _is_sdfile(string):
         """Test if input string is in ``SDfile`` format.
 
         :param string: Input string.
@@ -134,8 +139,8 @@ class Ctab(CTfile):
     |                  |
     | Counts line      |
     | Atom block       |
-    | Bond block       |
-    | Properties block |
+    | Bon       |
+    | Propertd blockies block |
     |                  |
     --------------------
     
@@ -224,7 +229,7 @@ class Ctab(CTfile):
                 self[key].append(token._asdict())
 
             elif key == 'CtabPropertiesBlock':
-                self[key].append(token._asdict())
+                self[key].setdefault(token.name, []).append(token.line)
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
@@ -273,6 +278,55 @@ class Ctab(CTfile):
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
 
         return output.getvalue()
+
+    @property
+    def version(self):
+        """Version of the `CTfile` formatting.
+        
+        :return: Version of the `CTfile`.
+        :rtype: str
+        """
+        return self['CtabCountsLine']['version']
+
+    @property
+    def atoms(self):
+        """List of atoms.
+
+        :return: List of atoms.
+        :rtype: :py:class:`list`
+        """
+        return [atom_line['atom_symbol'] for atom_line in self['CtabAtomBlock']]
+
+    @property
+    def positions(self):
+        """List of positions of atoms in atoms block starting from 1.
+        
+        :return: List of positions of atoms in atoms block starting from 1. 
+        :rtype: :py:class:`list`
+        """
+        return [str(i) for i in range(1, len(self.atoms)+1)]
+
+    @property
+    def iso(self, property_specifier='ISO'):
+        """
+
+        :return:
+        """
+        isotopes = []
+
+        if property_specifier in self['CtabPropertiesBlock']:
+            position_atom = dict(zip(self.positions, self.atoms))
+
+            for property_line in self['CtabPropertiesBlock'][property_specifier]:
+                property_values = property_line.split()[3:]
+                property_values_per_atom = [property_values[i:i+2] for i in range(0, len(property_values), 2)]
+
+                for entry in property_values_per_atom:
+                    position, isotope = entry
+                    atom_symbol = position_atom[position]
+                    isotopes.append({"atom_symbol": atom_symbol, "isotope": isotope, "position": position})
+
+        return isotopes
 
 
 class Molfile(CTfile):
@@ -332,6 +386,46 @@ class Molfile(CTfile):
                 raise KeyError('Molfile object does not supposed to have any other information: "{}".'.format(key))
 
         return output.getvalue()
+
+    @property
+    def version(self):
+        """Version of the `CTfile` formatting.
+
+        :return: Version of the `CTfile`.
+        :rtype: str
+        """
+        return self['Ctab'].version
+
+    @property
+    def atoms(self):
+        """List of atoms.
+
+        :return: List of atoms.
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].atoms
+
+    @property
+    def positions(self):
+        """List of positions of atoms in atoms block starting from 1.
+        
+        :return: List of positions of atoms in atoms block starting from 1. 
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].positions
+
+    @property
+    def atoms_positions(self):
+        """List of dictionaries consisting of atom symbol and its position.
+
+        :return: List of dictionaries consisting of atom symbol and its position.
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].atoms_positions
+
+    @property
+    def iso(self):
+        return self['Ctab'].iso
 
 
 class SDfile(CTfile):
