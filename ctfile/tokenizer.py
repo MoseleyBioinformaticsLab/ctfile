@@ -60,12 +60,15 @@ def tokenizer(text):
 
 
 def _atom_bond_block(number_of_lines, block_type, stream):
-    """
+    """Process atom and bond blocks of `Ctab`.
 
-    :param number_of_lines:
-    :param block_type:
-    :param stream:
-    :return:
+    :param number_of_lines: Number of lines to process from stream.
+    :param block_type: :py:class:`collections.namedtuple` to use for data processing.
+    :type block_type: :class:`~ctfile.tokenizer.CtabAtomBlockLine` or :class:`~ctfile.tokenizer.CtabBondBlockLine`
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    :rtype: :class:`~ctfile.tokenizer.CtabAtomBlockLine` or :class:`~ctfile.tokenizer.CtabBondBlockLine`
     """
     for _ in range(int(number_of_lines)):
         line = stream.popleft()
@@ -73,27 +76,27 @@ def _atom_bond_block(number_of_lines, block_type, stream):
 
 
 def _property_block(stream):
-    """
+    """Process properties block of `Ctab`
 
-    :param stream:
-    :return:
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    :rtype: :class:`~ctfile.tokenizer.CtabPropertiesBlockLine`
     """
-    line = ''
+    line = stream.popleft()
     while line != 'M  END':
-        line = stream.popleft()
         name = line.split()[1]
-
-        if name == 'END':
-            continue
-        else:
-            yield CtabPropertiesBlockLine(name, line)
+        yield CtabPropertiesBlockLine(name, line)
+        line = stream.popleft()
 
 
 def _data_block(stream):
-    """
+    """Process data block of `SDfile`.
     
-    :param stream: 
-    :return: 
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    :rtype: :class:`~ctfile.tokenizer.DataHeader` or :class:`~ctfile.tokenizer.DataItem`
     """
     while len(stream) > 0:
         line = stream.popleft()
