@@ -88,6 +88,7 @@ def _property_block(stream):
         else:
             yield CtabPropertiesBlockLine(name, line)
 
+
 def _data_block(stream):
     """
     
