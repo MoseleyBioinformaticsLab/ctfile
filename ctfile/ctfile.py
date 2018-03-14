@@ -7,11 +7,12 @@ import os
 import json
 import io
 from collections import OrderedDict
+from collections import UserList
 
 from .utils import OrderedCounter
 
 
-class CTfile(OrderedDict):
+class CTfile(object):
     """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
 
     this_directory = os.path.abspath(os.path.dirname(__file__))
@@ -26,14 +27,7 @@ class CTfile(OrderedDict):
         :param lexer: instance of the ``CTfile`` format tokenizer.
         :type lexer: :func:`~ctfile.tokenizer.tokenizer`
         """
-        super(CTfile, self).__init__()
         self.lexer = lexer
-
-        template_path = '{}/conf/{}_template.json'.format(self.this_directory, self.__class__.__name__)
-
-        with open(template_path, 'r') as infile:
-            self.update(json.load(infile, object_pairs_hook=OrderedDict))
-
         self._build()
 
     def read(self, filehandle):
@@ -130,7 +124,7 @@ class CTfile(OrderedDict):
         pass
 
 
-class Ctab(CTfile):
+class Ctab(CTfile, OrderedDict):
     """Ctab - connection table contains information describing the structural relationships
     and properties of a collection of atoms.
     
@@ -212,6 +206,13 @@ class Ctab(CTfile):
     counts_line_format = 'aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv'
     atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
     bond_block_format = '111222tttsssxxxrrrccc'
+
+    def __init__(self, lexer):
+        self["CtabCountsLine"] = {}
+        self["CtabAtomBlock"] = []
+        self["CtabBondBlock"] = []
+        self["CtabPropertiesBlock"] = {}
+        super(Ctab, self).__init__(lexer)
 
     def _build(self):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -331,7 +332,7 @@ class Ctab(CTfile):
         return isotopes
 
 
-class Molfile(CTfile):
+class Molfile(CTfile, OrderedDict):
     """Molfile - each molfile describes a single molecular structure which can
     contain disjoint fragments.
     
@@ -345,6 +346,11 @@ class Molfile(CTfile):
     |                  |
     --------------------
     """
+    def __init__(self, lexer):
+        self["HeaderBlock"] = {}
+        self["Ctab"] = {}
+        super(Molfile, self).__init__(lexer)
+
     def _build(self):
         """Build :class:`~ctfile.ctfile.Molfile` instance.
 
@@ -417,20 +423,11 @@ class Molfile(CTfile):
         return self['Ctab'].positions
 
     @property
-    def atoms_positions(self):
-        """List of dictionaries consisting of atom symbol and its position.
-
-        :return: List of dictionaries consisting of atom symbol and its position.
-        :rtype: :py:class:`list`
-        """
-        return self['Ctab'].atoms_positions
-
-    @property
     def iso(self):
         return self['Ctab'].iso
 
 
-class SDfile(CTfile):
+class SDfile(CTfile, UserList):
     """SDfile - each structure-data file contains structures and data for any number
     of molecules.
 
