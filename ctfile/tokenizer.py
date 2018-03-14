@@ -3,42 +3,42 @@ from collections import deque
 from collections import namedtuple
 
 
-HeaderBlock = namedtuple("HeaderBlock", ["molecule_name", "software", "comment"])
+HeaderBlock = namedtuple('HeaderBlock', ['molecule_name', 'software', 'comment'])
 
-CtabBlock = namedtuple("CtabBlock", [])
+CtabBlock = namedtuple('CtabBlock', [])
 
-CtabCountsLine = namedtuple("CtabCountsLine", ["number_of_atoms", "number_of_bonds", "number_of_atom_lists",
-                                               "not_used1", "chiral_flag", "number_of_stext_entries", "not_used2",
-                                               "not_used3", "not_used4", "not_used5", "number_of_properties",
-                                               "version"])
+CtabCountsLine = namedtuple('CtabCountsLine', ['number_of_atoms', 'number_of_bonds', 'number_of_atom_lists',
+                                               'not_used1', 'chiral_flag', 'number_of_stext_entries', 'not_used2',
+                                               'not_used3', 'not_used4', 'not_used5', 'number_of_properties',
+                                               'version'])
 
-CtabAtomBlockLine = namedtuple("CtabAtomBlock", ["x", "y", "z", "atom_symbol", "mass_difference", "charge",
-                                                  "atom_stereo_parity", "hydrogen_count", "stereo_care_box",
-                                                  "valence", "h0designator", "not_used1", "not_used2",
-                                                  "atom_atom_mapping_number", "inversion_retention_flag",
-                                                  "exact_change_flag"])
+CtabAtomBlockLine = namedtuple('CtabAtomBlock', ['x', 'y', 'z', 'atom_symbol', 'mass_difference', 'charge',
+                                                  'atom_stereo_parity', 'hydrogen_count', 'stereo_care_box',
+                                                  'valence', 'h0designator', 'not_used1', 'not_used2',
+                                                  'atom_atom_mapping_number', 'inversion_retention_flag',
+                                                  'exact_change_flag'])
 
-CtabBondBlockLine = namedtuple("CtabBondBlock", ["first_atom_number", "second_atom_number", "bond_type",
-                                                  "bond_stereo", "not_used1", "bond_topology",
-                                                  "reacting_center_status"])
+CtabBondBlockLine = namedtuple('CtabBondBlock', ['first_atom_number', 'second_atom_number', 'bond_type',
+                                                  'bond_stereo', 'not_used1', 'bond_topology',
+                                                  'reacting_center_status'])
 
-CtabPropertiesBlockLine = namedtuple("CtabPropertiesBlock", ["name", "line"])
+CtabPropertiesBlockLine = namedtuple('CtabPropertiesBlock', ['name', 'line'])
 
-DataHeader = namedtuple("DataHeader", ["header"])
+DataHeader = namedtuple('DataHeader', ['header'])
 
-DataItem = namedtuple("DataItem", ["data_item"])
+DataItem = namedtuple('DataItem', ['data_item'])
 
 
 def tokenizer(text):
-    """A lexical analyzer for the `CTfile` formatted files.
+    '''A lexical analyzer for the `CTfile` formatted files.
 
     :param str text: `CTfile` formatted text.
     :return: Tuples of data.
     :rtype: py:class:`~collections.namedtuple`
-    """
-    for entry in text.split("$$$$"):
+    '''
+    for entry in text.split('$$$$'):
         if entry:
-            lines_stream = deque(entry.split("\n"))
+            lines_stream = deque(entry.split('\n'))
         else:
             continue
 
@@ -60,40 +60,44 @@ def tokenizer(text):
 
 
 def _atom_bond_block(number_of_lines, block_type, stream):
-    """
+    '''
 
     :param number_of_lines:
     :param block_type:
     :param stream:
     :return:
-    """
+    '''
     for _ in range(int(number_of_lines)):
         line = stream.popleft()
         yield block_type(*line.split())
 
 
 def _property_block(stream):
-    """
+    '''
 
     :param stream:
     :return:
-    """
-    line = ""
-    while line != "M  END":
+    '''
+    line = ''
+    while line != 'M  END':
         line = stream.popleft()
         name = line.split()[1]
-        yield CtabPropertiesBlockLine(name, line)
+
+        if name == 'END':
+            continue
+        else:
+            yield CtabPropertiesBlockLine(name, line)
 
 def _data_block(stream):
-    """
+    '''
     
     :param stream: 
     :return: 
-    """
+    '''
     while len(stream) > 0:
         line = stream.popleft()
 
-        if line.startswith(">"):
+        if line.startswith('>'):
             yield DataHeader(line[1:].strip())
         else:
             data_item = line.strip()
