@@ -9,7 +9,7 @@ from collections import OrderedDict
 from collections import UserList
 
 from .utils import OrderedCounter
-from .utils import ctab_properties_conf
+from .conf import ctab_properties_conf
 
 class CTfile(object):
     """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
