@@ -1,0 +1,59 @@
+{
+    "V2000": {
+        "ISO": {
+            "description": "isotope",
+            "fmt": "M  ISO",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "CHG": {
+            "description": "charge",
+            "fmt": "M  CHG",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "RAD": {
+            "description": "radical",
+            "fmt": "M  RAD",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "RBC": {
+            "description": "ring bond count",
+            "fmt": "M  RBC",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "SUB": {
+            "description": "substitution count",
+            "fmt": "M  SUB",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "UNS": {
+            "description": "unsaturated atom",
+            "fmt": "M  UNS",
+            "max_entries_per_line": "8",
+            "default_entries_per_line": "1",
+            "values": ["position", "value"]
+        },
+
+        "END": {
+            "description": "last line in properties block",
+            "fmt": "M  END",
+            "max_entries_per_line": null,
+            "default_entries_per_line": null,
+            "values": null
+        }
+    }
+}
