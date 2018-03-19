@@ -3,23 +3,17 @@
 
 from __future__ import print_function, division, unicode_literals
 import sys
-import os
 import json
 import io
 from collections import OrderedDict
 from collections import UserList
 
 from .utils import OrderedCounter
-
+from .conf import ctab_properties_conf
 
 class CTfile(object):
     """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
-
-    this_directory = os.path.abspath(os.path.dirname(__file__))
-    ctab_properties_path = '{}/conf/Ctab_properties.json'.format(this_directory)
-
-    with open(ctab_properties_path, 'r') as infile:
-        ctab_properties_conf = json.load(infile, object_pairs_hook=OrderedDict)
+    ctab_properties = ctab_properties_conf
 
     def __init__(self, lexer):
         """CTfile initializer.
@@ -208,10 +202,14 @@ class Ctab(CTfile, OrderedDict):
     bond_block_format = '111222tttsssxxxrrrccc'
 
     def __init__(self, lexer):
-        self["CtabCountsLine"] = {}
+        """Ctab initializer.
+        
+        :param lexer: 
+        """
+        self["CtabCountsLine"] = OrderedDict()
         self["CtabAtomBlock"] = []
         self["CtabBondBlock"] = []
-        self["CtabPropertiesBlock"] = {}
+        self["CtabPropertiesBlock"] = OrderedDict()
         super(Ctab, self).__init__(lexer)
 
     def _build(self):
@@ -275,7 +273,7 @@ class Ctab(CTfile, OrderedDict):
                     for property_line in self[key][property_name]:
                         output.write(property_line)
                         output.write('\n')
-                output.write('M  END\n')
+                output.write(self.ctab_properties[self.version]['END']['fmt'])
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
@@ -347,8 +345,12 @@ class Molfile(CTfile, OrderedDict):
     --------------------
     """
     def __init__(self, lexer):
-        self["HeaderBlock"] = {}
-        self["Ctab"] = {}
+        """Molfile initializer.
+        
+        :param lexer: 
+        """
+        self["HeaderBlock"] = OrderedDict()
+        self["Ctab"] = OrderedDict()
         super(Molfile, self).__init__(lexer)
 
     def _build(self):

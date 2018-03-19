@@ -4,6 +4,7 @@
 from collections import OrderedDict
 from collections import Counter
 
+
 class OrderedCounter(Counter, OrderedDict):
     """Counter that remembers the order of elements are first seen."""
 
