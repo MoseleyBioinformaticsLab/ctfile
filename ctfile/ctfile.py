@@ -26,13 +26,25 @@ class CTfile(OrderedDict):
         self.lexer = lexer
         self._build()
 
-    def read(self, filehandle):
-        """
+    def load(self, filehandle):
+        """Load data into ``CTfile`` object. 
 
-        :param filehandle:
+        :param filehandle: File-like object.
         :return:
         """
         input_str = filehandle.read()
+
+    def loadstr(self, input_str):
+        """
+        
+        :param str input_str: String containing data in ``CTfile`` format.
+        :return: 
+        """
+        if not isinstance(input_str, str):
+            raise TypeError('Must be type str, not {}'.format(input_str.__class__.__name__))
+
+
+
 
     def write(self, filehandle, file_format):
         """Write :class:`~ctfile.ctfile.CTfile` data into file. 
@@ -106,7 +118,16 @@ class CTfile(OrderedDict):
         :return: Input string if in ``Molfile`` format or False otherwise.
         :rtype: :py:class:`str` or :py:obj:`False`
         """
-        pass
+        if isinstance(string, str):
+            if '$$$$\n' in string:
+                return False
+            return True
+        elif isinstance(string, bytes):
+            if b'$$$$\n' in string:
+                return False
+            return True
+        else:
+            raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
 
     @staticmethod
     def _is_sdfile(string):
@@ -117,7 +138,16 @@ class CTfile(OrderedDict):
         :return: Input string if in ``SDfile`` format or False otherwise.
         :rtype: :py:class:`str` or :py:obj:`False`
         """
-        pass
+        if isinstance(string, str):
+            if '$$$$\n' in string:
+                return True
+            return False
+        elif isinstance(string, bytes):
+            if b'$$$$\n' in string:
+                return True
+            return False
+        else:
+            raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
 
 
 class Ctab(CTfile):
