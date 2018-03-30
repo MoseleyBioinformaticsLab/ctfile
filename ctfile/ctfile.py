@@ -280,6 +280,7 @@ class Ctab(CTfile):
                         output.write(property_line)
                         output.write('\n')
                 output.write(self.ctab_properties[self.version]['END']['fmt'])
+                output.write('\n')
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
@@ -497,9 +498,10 @@ class SDfile(CTfile):
         return self
 
     def _build_data_block(self):
-        """
+        """Build the data block of :class:`~ctfile.ctfile.SDfile` instance. 
         
-        :return: 
+        :return: Data block.
+        :rtype: :py:class:`collections.OrderedDict`
         """
         data_block = OrderedDict()
         header = ''
@@ -509,7 +511,7 @@ class SDfile(CTfile):
             key = token.__class__.__name__
 
             if key == 'DataHeader':
-                header = token.header
+                header = token.header[1:-1]
                 data_block.setdefault(header, [])
 
             elif key == 'DataItem':
@@ -522,3 +524,23 @@ class SDfile(CTfile):
                 raise KeyError('SDfile data block does not supposed to have any other information: "{}".'.format(key))
 
         return data_block
+
+    def _to_ctfile(self):
+        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
+
+        :return: ``CTfile`` formatted string.
+        :rtype: :py:class:`str`
+        """
+        output = io.StringIO()
+
+        for entry in self.values():
+            output.write(entry['molfile']._to_ctfile())
+
+            for header, values in entry['data'].items():
+                output.write('> <{}>\n'.format(header))
+                output.write('\n'.join(values))
+                output.write('\n\n')
+
+            output.write('$$$$\n')
+
+        return output.getvalue()
