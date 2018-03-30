@@ -22,14 +22,14 @@ CtabCountsLine = namedtuple('CtabCountsLine', ['number_of_atoms', 'number_of_bon
                                                'version'])
 
 CtabAtomBlockLine = namedtuple('CtabAtomBlock', ['x', 'y', 'z', 'atom_symbol', 'mass_difference', 'charge',
-                                                  'atom_stereo_parity', 'hydrogen_count', 'stereo_care_box',
-                                                  'valence', 'h0designator', 'not_used1', 'not_used2',
-                                                  'atom_atom_mapping_number', 'inversion_retention_flag',
-                                                  'exact_change_flag'])
+                                                 'atom_stereo_parity', 'hydrogen_count', 'stereo_care_box',
+                                                 'valence', 'h0designator', 'not_used1', 'not_used2',
+                                                 'atom_atom_mapping_number', 'inversion_retention_flag',
+                                                 'exact_change_flag'])
 
 CtabBondBlockLine = namedtuple('CtabBondBlock', ['first_atom_number', 'second_atom_number', 'bond_type',
-                                                  'bond_stereo', 'not_used1', 'bond_topology',
-                                                  'reacting_center_status'])
+                                                 'bond_stereo', 'not_used1', 'bond_topology',
+                                                 'reacting_center_status'])
 
 CtabPropertiesBlockLine = namedtuple('CtabPropertiesBlock', ['name', 'line'])
 
@@ -71,6 +71,7 @@ def _molfile(stream):
     yield from _ctab(stream)
     yield MolfileEnd()
 
+
 def _sdfile(stream):
     """Process ``SDfile``.
     
@@ -82,6 +83,7 @@ def _sdfile(stream):
     yield from _data_block(stream=stream)
     yield DataBlockEnd()
 
+
 def _ctab(stream):
     """Process ``Ctab``.
     
@@ -91,8 +93,8 @@ def _ctab(stream):
     """
     yield CtabBlockStart()
     counts_line = stream.popleft()
-    counts_line_values = [counts_line[i:i + 3].strip() for i in range(0, len(counts_line) - 6, 3)] + [
-    counts_line[-6:len(counts_line)].strip()]
+    counts_line_values = [counts_line[i:i + 3].strip() for i in range(0, len(counts_line) - 6, 3)] + \
+                         [counts_line[-6:len(counts_line)].strip()]
     ctab_counts_line = CtabCountsLine(*counts_line_values)
     yield ctab_counts_line
 
