@@ -8,8 +8,13 @@ from collections import namedtuple
 
 
 HeaderBlock = namedtuple('HeaderBlock', ['molecule_name', 'software', 'comment'])
-
-CtabBlock = namedtuple('CtabBlock', [])
+MolfileStart = namedtuple('MolfileStart', [])
+MolfileEnd = namedtuple('MolfileEnd', [])
+CtabBlockStart = namedtuple('CtabBlockStart', [])
+CtabBlockEnd = namedtuple('CtabBlockEnd', [])
+DataBlockStart = namedtuple('DataBlockStart', [])
+DataBlockEnd = namedtuple('DataBlockEnd', [])
+EndOfFile = namedtuple('EndOfFile', [])
 
 CtabCountsLine = namedtuple('CtabCountsLine', ['number_of_atoms', 'number_of_bonds', 'number_of_atom_lists',
                                                'not_used1', 'chiral_flag', 'number_of_stext_entries', 'not_used2',
@@ -28,8 +33,8 @@ CtabBondBlockLine = namedtuple('CtabBondBlock', ['first_atom_number', 'second_at
 
 CtabPropertiesBlockLine = namedtuple('CtabPropertiesBlock', ['name', 'line'])
 
-DataHeader = namedtuple('DataHeader', ['header'])
 
+DataHeader = namedtuple('DataHeader', ['header'])
 DataItem = namedtuple('DataItem', ['data_item'])
 
 
@@ -40,31 +45,68 @@ def tokenizer(text):
     :return: Tuples of data.
     :rtype: py:class:`~collections.namedtuple`
     """
-    for entry in text.split('$$$$'):
-        if entry:
+    for entry in text.split('$$$$\n'):
+        if entry.rstrip():
             lines_stream = deque(entry.split('\n'))
         else:
             continue
 
-        yield HeaderBlock(lines_stream.popleft().strip(), lines_stream.popleft().strip(), lines_stream.popleft().strip())
+        yield from _molfile(stream=lines_stream)
 
-        counts_line = lines_stream.popleft()
-        counts_line_values = [counts_line[i:i + 3].strip() for i in range(0, len(counts_line) - 6, 3)] + [counts_line[-6:len(counts_line)].strip()]
-        ctab_counts_line = CtabCountsLine(*counts_line_values)
-        number_of_atoms = ctab_counts_line.number_of_atoms
-        number_of_bonds = ctab_counts_line.number_of_bonds
+        if len(lines_stream):
+            yield from _sdfile(stream=lines_stream)
 
-        yield CtabBlock()
-        yield ctab_counts_line
-
-        yield from _atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=lines_stream)
-        yield from _atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=lines_stream)
-        yield from _property_block(stream=lines_stream)
-        yield from _data_block(stream=lines_stream)
+    yield EndOfFile()
 
 
-def _atom_bond_block(number_of_lines, block_type, stream):
-    """Process atom and bond blocks of `Ctab`.
+def _molfile(stream):
+    """Process ``Molfile``.
+    
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    """
+    yield MolfileStart()
+    yield HeaderBlock(stream.popleft().strip(), stream.popleft().strip(), stream.popleft().strip())
+    yield from _ctab(stream)
+    yield MolfileEnd()
+
+def _sdfile(stream):
+    """Process ``SDfile``.
+    
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    """
+    yield DataBlockStart()
+    yield from _data_block(stream=stream)
+    yield DataBlockEnd()
+
+def _ctab(stream):
+    """Process ``Ctab``.
+    
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    """
+    yield CtabBlockStart()
+    counts_line = stream.popleft()
+    counts_line_values = [counts_line[i:i + 3].strip() for i in range(0, len(counts_line) - 6, 3)] + [
+    counts_line[-6:len(counts_line)].strip()]
+    ctab_counts_line = CtabCountsLine(*counts_line_values)
+    yield ctab_counts_line
+
+    number_of_atoms = ctab_counts_line.number_of_atoms
+    number_of_bonds = ctab_counts_line.number_of_bonds
+
+    yield from _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream)
+    yield from _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream)
+    yield from _ctab_property_block(stream=stream)
+    yield CtabBlockEnd()
+
+
+def _ctab_atom_bond_block(number_of_lines, block_type, stream):
+    """Process atom and bond blocks of ``Ctab``.
 
     :param number_of_lines: Number of lines to process from stream.
     :param block_type: :py:class:`collections.namedtuple` to use for data processing.
@@ -79,8 +121,8 @@ def _atom_bond_block(number_of_lines, block_type, stream):
         yield block_type(*line.split())
 
 
-def _property_block(stream):
-    """Process properties block of `Ctab`
+def _ctab_property_block(stream):
+    """Process properties block of ``Ctab``.
 
     :param stream: Queue containing lines of text.
     :type stream: :py:class:`collections.deque`
@@ -95,7 +137,7 @@ def _property_block(stream):
 
 
 def _data_block(stream):
-    """Process data block of `SDfile`.
+    """Process data block of ``CTfile``.
     
     :param stream: Queue containing lines of text.
     :type stream: :py:class:`collections.deque`
