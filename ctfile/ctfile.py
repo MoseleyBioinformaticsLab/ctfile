@@ -6,13 +6,14 @@ import sys
 import json
 import io
 from collections import OrderedDict
-from collections import UserList
 
 from .utils import OrderedCounter
 from .conf import ctab_properties_conf
 
-class CTfile(object):
+
+class CTfile(OrderedDict):
     """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
+
     ctab_properties = ctab_properties_conf
 
     def __init__(self, lexer):
@@ -21,6 +22,7 @@ class CTfile(object):
         :param lexer: instance of the ``CTfile`` format tokenizer.
         :type lexer: :func:`~ctfile.tokenizer.tokenizer`
         """
+        super(CTfile, self).__init__()
         self.lexer = lexer
         self._build()
 
@@ -81,7 +83,7 @@ class CTfile(object):
 
     def _to_json(self, sort_keys=False, indent=4):
         """Convert :class:`~ctfile.ctfile.CTfile` into JSON string.
-        
+
         :return: ``JSON`` formatted string.
         :rtype: :py:class:`str`
         """
@@ -118,7 +120,7 @@ class CTfile(object):
         pass
 
 
-class Ctab(CTfile, OrderedDict):
+class Ctab(CTfile):
     """Ctab - connection table contains information describing the structural relationships
     and properties of a collection of atoms.
     
@@ -218,7 +220,8 @@ class Ctab(CTfile, OrderedDict):
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`
         """
-        for token in self.lexer:
+        while True:
+            token = next(self.lexer)
             key = token.__class__.__name__
 
             if key == 'CtabCountsLine':
@@ -229,6 +232,9 @@ class Ctab(CTfile, OrderedDict):
 
             elif key == 'CtabPropertiesBlock':
                 self[key].setdefault(token.name, []).append(token.line)
+
+            elif key == 'CtabBlockEnd':
+                break
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
@@ -330,7 +336,7 @@ class Ctab(CTfile, OrderedDict):
         return isotopes
 
 
-class Molfile(CTfile, OrderedDict):
+class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
     contain disjoint fragments.
     
@@ -359,15 +365,24 @@ class Molfile(CTfile, OrderedDict):
         :return: :class:`~ctfile.ctfile.Molfile` instance.
         :rtype: :class:`~ctfile.ctfile.Molfile`
         """
-        for token in self.lexer:
+        key = ''
+        while key != 'EndOfFile':
+
+            token = next(self.lexer)
             key = token.__class__.__name__
 
             if key == 'HeaderBlock':
                 self[key].update(token._asdict())
 
-            elif key == 'CtabBlock':
+            elif key == 'CtabBlockStart':
                 ctab = Ctab(lexer=self.lexer)
                 self['Ctab'] = ctab
+
+            elif key == 'MolfileStart':
+                pass
+
+            elif key in ('MolfileEnd', 'EndOfFile'):
+                break
 
             else:
                 raise KeyError('Molfile object does not supposed to have any other information: "{}".'.format(key))
@@ -429,7 +444,7 @@ class Molfile(CTfile, OrderedDict):
         return self['Ctab'].iso
 
 
-class SDfile(CTfile, UserList):
+class SDfile(CTfile):
     """SDfile - each structure-data file contains structures and data for any number
     of molecules.
 
@@ -449,4 +464,61 @@ class SDfile(CTfile, UserList):
     | ----------------- |
     ---------------------
     """
-    pass
+    def __init__(self, lexer):
+        super(SDfile, self).__init__(lexer)
+
+    def _build(self):
+        """Build :class:`~ctfile.ctfile.SDfile` instance.
+
+        :return: :class:`~ctfile.ctfile.SDfile` instance.
+        :rtype: :class:`~ctfile.ctfile.SDfile`
+        """
+        current_entry = 0
+
+        while True:
+            token = next(self.lexer)
+            key = token.__class__.__name__
+
+            if key == 'MolfileStart':
+                current_entry += 1
+                molfile = Molfile(lexer=self.lexer)
+                self[current_entry] = OrderedDict(molfile=molfile, data=OrderedDict())
+
+            elif key == 'DataBlockStart':
+                data_block = self._build_data_block()
+                self[current_entry]['data'].update(data_block)
+
+            elif key == 'EndOfFile':
+                break
+
+            else:
+                raise KeyError('SDfile does not supposed to have any other information: "{}".'.format(key))
+
+        return self
+
+    def _build_data_block(self):
+        """
+        
+        :return: 
+        """
+        data_block = OrderedDict()
+        header = ''
+
+        while True:
+            token = next(self.lexer)
+            key = token.__class__.__name__
+
+            if key == 'DataHeader':
+                header = token.header
+                data_block.setdefault(header, [])
+
+            elif key == 'DataItem':
+                data_block[header].append(token.data_item)
+
+            elif key == 'DataBlockEnd':
+                break
+
+            else:
+                raise KeyError('SDfile data block does not supposed to have any other information: "{}".'.format(key))
+
+        return data_block
