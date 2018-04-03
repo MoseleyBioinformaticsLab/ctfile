@@ -17,10 +17,7 @@ def read_file(path, verbose=False):
     :rtype: :class:`~ctfile.ctfile.CTfile`
     """
     for filehandle in filehandles(path, verbose=verbose):
-        try:
-            return CTfile.load(filehandle)
-        except:
-            raise ValueError('Cannot load file from path: "{}"'.format(path))
+        return CTfile.load(filehandle)
 
 
 def read_files(path, verbose=True):
