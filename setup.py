@@ -28,7 +28,8 @@ def find_version():
 
 
 REQUIRES = [
-    "docopt >= 0.6.2"
+    "docopt >= 0.6.2",
+    "filehandles >= 0.3.1"
 ]
 
 
