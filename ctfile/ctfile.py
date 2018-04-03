@@ -7,8 +7,9 @@ import json
 import io
 from collections import OrderedDict
 
-from .utils import OrderedCounter
+from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
+from .utils import OrderedCounter
 
 
 class CTfile(OrderedDict):
@@ -16,35 +17,57 @@ class CTfile(OrderedDict):
 
     ctab_properties = ctab_properties_conf
 
-    def __init__(self, lexer):
+    def __init__(self, *args, **kwargs):
         """CTfile initializer.
         
         :param lexer: instance of the ``CTfile`` format tokenizer.
         :type lexer: :func:`~ctfile.tokenizer.tokenizer`
         """
-        super(CTfile, self).__init__()
-        self.lexer = lexer
-        self._build()
+        super(CTfile, self).__init__(*args, **kwargs)
 
-    def load(self, filehandle):
-        """Load data into ``CTfile`` object. 
+    @classmethod
+    def load(cls, filehandle):
+        """Load data into ``CTfile`` object from file-like object.
 
         :param filehandle: File-like object.
-        :return:
+        :return: Instance of ``CTfile``.
         """
-        input_str = filehandle.read()
+        return cls.loadstr(filehandle.read())
 
-    def loadstr(self, input_str):
-        """
+    @classmethod
+    def loadstr(cls, string):
+        """Load data into ``CTfile`` object from string.
         
         :param str input_str: String containing data in ``CTfile`` format.
-        :return: 
+        :return: Instance of ``CTfile``.
         """
-        if not isinstance(input_str, str):
-            raise TypeError('Must be type str, not {}'.format(input_str.__class__.__name__))
+        try:
+            string = string.decode('utf-8')
+        except AttributeError:
+            pass
 
+        lexer = tokenizer(string)
 
+        if cls._is_molfile(string):
+            molfile = Molfile()
 
+            try:
+                molfile.update(json.loads(string))
+            except json.JSONDecodeError:
+                molfile._build(lexer)
+            return molfile
+
+        elif cls._is_sdfile(string):
+            sdfile = SDfile()
+
+            try:
+                sdfile.update(json.loads(string))
+            except json.JSONDecodeError:
+                sdfile._build(lexer)
+            return sdfile
+
+        else:
+            raise ValueError('Cannot determine the format of string.')
 
     def write(self, filehandle, file_format):
         """Write :class:`~ctfile.ctfile.CTfile` data into file. 
@@ -85,7 +108,7 @@ class CTfile(OrderedDict):
         """
         print(self.writestr(file_format=file_format), file=f)
 
-    def _build(self):
+    def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.CTfile` instance.
 
         :return: :class:`~ctfile.ctfile.CTfile` instance.
@@ -118,16 +141,16 @@ class CTfile(OrderedDict):
         :return: Input string if in ``Molfile`` format or False otherwise.
         :rtype: :py:class:`str` or :py:obj:`False`
         """
-        if isinstance(string, str):
-            if '$$$$\n' in string:
-                return False
-            return True
-        elif isinstance(string, bytes):
-            if b'$$$$\n' in string:
-                return False
-            return True
+        try:
+            string = string.decode('utf-8')
+        except AttributeError:
+            pass
         else:
             raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
+
+        if '$$$$\n' in string:
+            return False
+        return True
 
     @staticmethod
     def _is_sdfile(string):
@@ -138,16 +161,16 @@ class CTfile(OrderedDict):
         :return: Input string if in ``SDfile`` format or False otherwise.
         :rtype: :py:class:`str` or :py:obj:`False`
         """
-        if isinstance(string, str):
-            if '$$$$\n' in string:
-                return True
-            return False
-        elif isinstance(string, bytes):
-            if b'$$$$\n' in string:
-                return True
-            return False
+        try:
+            string = string.decode('utf-8')
+        except AttributeError:
+            pass
         else:
             raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
+
+        if '$$$$\n' in string:
+            return True
+        return False
 
 
 class Ctab(CTfile):
@@ -233,25 +256,22 @@ class Ctab(CTfile):
     atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
     bond_block_format = '111222tttsssxxxrrrccc'
 
-    def __init__(self, lexer):
-        """Ctab initializer.
-        
-        :param lexer: 
-        """
+    def __init__(self):
+        """Ctab initializer."""
         self["CtabCountsLine"] = OrderedDict()
         self["CtabAtomBlock"] = []
         self["CtabBondBlock"] = []
         self["CtabPropertiesBlock"] = OrderedDict()
-        super(Ctab, self).__init__(lexer)
+        super(Ctab, self).__init__()
 
-    def _build(self):
+    def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
         
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`
         """
         while True:
-            token = next(self.lexer)
+            token = next(lexer)
             key = token.__class__.__name__
 
             if key == 'CtabCountsLine':
@@ -381,16 +401,13 @@ class Molfile(CTfile):
     |                  |
     --------------------
     """
-    def __init__(self, lexer):
-        """Molfile initializer.
-        
-        :param lexer: 
-        """
+    def __init__(self):
+        """Molfile initializer."""
         self["HeaderBlock"] = OrderedDict()
         self["Ctab"] = OrderedDict()
-        super(Molfile, self).__init__(lexer)
+        super(Molfile, self).__init__()
 
-    def _build(self):
+    def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Molfile` instance.
 
         :return: :class:`~ctfile.ctfile.Molfile` instance.
@@ -399,14 +416,15 @@ class Molfile(CTfile):
         key = ''
         while key != 'EndOfFile':
 
-            token = next(self.lexer)
+            token = next(lexer)
             key = token.__class__.__name__
 
             if key == 'HeaderBlock':
                 self[key].update(token._asdict())
 
             elif key == 'CtabBlockStart':
-                ctab = Ctab(lexer=self.lexer)
+                ctab = Ctab()
+                ctab._build(lexer)
                 self['Ctab'] = ctab
 
             elif key == 'MolfileStart':
@@ -495,10 +513,10 @@ class SDfile(CTfile):
     | ----------------- |
     ---------------------
     """
-    def __init__(self, lexer):
-        super(SDfile, self).__init__(lexer)
+    def __init__(self):
+        super(SDfile, self).__init__()
 
-    def _build(self):
+    def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.SDfile` instance.
 
         :return: :class:`~ctfile.ctfile.SDfile` instance.
@@ -507,16 +525,17 @@ class SDfile(CTfile):
         current_entry = 0
 
         while True:
-            token = next(self.lexer)
+            token = next(lexer)
             key = token.__class__.__name__
 
             if key == 'MolfileStart':
                 current_entry += 1
-                molfile = Molfile(lexer=self.lexer)
+                molfile = Molfile()
+                molfile._build(lexer)
                 self[current_entry] = OrderedDict(molfile=molfile, data=OrderedDict())
 
             elif key == 'DataBlockStart':
-                data_block = self._build_data_block()
+                data_block = self._build_data_block(lexer)
                 self[current_entry]['data'].update(data_block)
 
             elif key == 'EndOfFile':
@@ -527,7 +546,7 @@ class SDfile(CTfile):
 
         return self
 
-    def _build_data_block(self):
+    def _build_data_block(self, lexer):
         """Build the data block of :class:`~ctfile.ctfile.SDfile` instance. 
         
         :return: Data block.
@@ -537,7 +556,7 @@ class SDfile(CTfile):
         header = ''
 
         while True:
-            token = next(self.lexer)
+            token = next(lexer)
             key = token.__class__.__name__
 
             if key == 'DataHeader':
@@ -570,7 +589,6 @@ class SDfile(CTfile):
                 output.write('> <{}>\n'.format(header))
                 output.write('\n'.join(values))
                 output.write('\n\n')
-
             output.write('$$$$\n')
 
         return output.getvalue()
