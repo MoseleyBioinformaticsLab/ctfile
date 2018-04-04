@@ -68,6 +68,7 @@ TODO
 * Add support for version ``V3000`` reading  of ``CTfile`` formatted files.
 * Add command-line interface.
 * Add ability to convert between ``V2000`` and ``V3000`` syntax.
+* Add proper package documentation.
 
 
 License
