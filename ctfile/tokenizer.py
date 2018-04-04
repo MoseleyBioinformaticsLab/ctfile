@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 from __future__ import print_function, division, unicode_literals
 from collections import deque
 from collections import namedtuple
@@ -51,10 +50,14 @@ def tokenizer(text):
         else:
             continue
 
-        yield from _molfile(stream=lines_stream)
+        # yield from _molfile(stream=lines_stream)
+        for token in _molfile(stream=lines_stream):
+            yield token
 
         if len(lines_stream):
-            yield from _sdfile(stream=lines_stream)
+            # yield from _sdfile(stream=lines_stream)
+            for token in _sdfile(stream=lines_stream):
+                yield token
 
     yield EndOfFile()
 
@@ -68,7 +71,9 @@ def _molfile(stream):
     """
     yield MolfileStart()
     yield HeaderBlock(stream.popleft().strip(), stream.popleft().strip(), stream.popleft().strip())
-    yield from _ctab(stream)
+    # yield from _ctab(stream)
+    for token in _ctab(stream):
+        yield token
     yield MolfileEnd()
 
 
@@ -80,7 +85,9 @@ def _sdfile(stream):
     :return: Tuples of data.
     """
     yield DataBlockStart()
-    yield from _data_block(stream=stream)
+    # yield from _data_block(stream=stream)
+    for token in _data_block(stream=stream):
+        yield token
     yield DataBlockEnd()
 
 
@@ -101,9 +108,18 @@ def _ctab(stream):
     number_of_atoms = ctab_counts_line.number_of_atoms
     number_of_bonds = ctab_counts_line.number_of_bonds
 
-    yield from _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream)
-    yield from _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream)
-    yield from _ctab_property_block(stream=stream)
+    # yield from _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream)
+    for token in _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream):
+        yield token
+
+    # yield from _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream)
+    for token in _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream):
+        yield token
+
+    # yield from _ctab_property_block(stream=stream)
+    for token in _ctab_property_block(stream=stream):
+        yield token
+
     yield CtabBlockEnd()
 
 

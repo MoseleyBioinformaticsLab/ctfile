@@ -145,8 +145,6 @@ class CTfile(OrderedDict):
             string = string.decode('utf-8')
         except AttributeError:
             pass
-        else:
-            raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
 
         if '$$$$\n' in string:
             return False
@@ -165,8 +163,6 @@ class CTfile(OrderedDict):
             string = string.decode('utf-8')
         except AttributeError:
             pass
-        else:
-            raise TypeError('Must be type "str" or "bytes", not {}'.format(string.__class__.__name__))
 
         if '$$$$\n' in string:
             return True
@@ -258,11 +254,11 @@ class Ctab(CTfile):
 
     def __init__(self):
         """Ctab initializer."""
+        super(Ctab, self).__init__()
         self["CtabCountsLine"] = OrderedDict()
         self["CtabAtomBlock"] = []
         self["CtabBondBlock"] = []
         self["CtabPropertiesBlock"] = OrderedDict()
-        super(Ctab, self).__init__()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -403,9 +399,9 @@ class Molfile(CTfile):
     """
     def __init__(self):
         """Molfile initializer."""
+        super(Molfile, self).__init__()
         self["HeaderBlock"] = OrderedDict()
         self["Ctab"] = OrderedDict()
-        super(Molfile, self).__init__()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Molfile` instance.
