@@ -1,6 +1,19 @@
 ctfile
 ======
 
+.. image:: https://img.shields.io/pypi/l/ctfile.svg
+   :target: https://choosealicense.com/licenses/bsd-3-clause-clear/
+   :alt: License information
+
+.. image:: https://img.shields.io/pypi/v/ctfile.svg
+   :target: https://pypi.org/project/ctfile
+   :alt: Current library version
+
+.. image:: https://img.shields.io/pypi/pyversions/ctfile.svg
+   :target: https://pypi.org/project/ctfile
+   :alt: Supported Python versions
+
+
 The ``ctfile`` package is a Python library that facilitates reading and writing
 of ``CTfile`` formats.
 
