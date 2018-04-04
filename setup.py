@@ -28,8 +28,8 @@ def find_version():
 
 
 REQUIRES = [
-    "docopt >= 0.6.2",
-    "filehandles >= 0.3.1"
+    'docopt >= 0.6.2',
+    'filehandles >= 0.3.1'
 ]
 
 
@@ -54,6 +54,7 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
