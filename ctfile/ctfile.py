@@ -48,7 +48,7 @@ class CTfile(OrderedDict):
 
         lexer = tokenizer(string)
 
-        if cls._is_molfile(string):
+        if cls.is_molfile(string):
             molfile = Molfile()
 
             try:
@@ -57,7 +57,7 @@ class CTfile(OrderedDict):
                 molfile._build(lexer)
             return molfile
 
-        elif cls._is_sdfile(string):
+        elif cls.is_sdfile(string):
             sdfile = SDfile()
 
             try:
@@ -133,7 +133,7 @@ class CTfile(OrderedDict):
         raise NotImplementedError('Subclass must implement abstract method')
 
     @staticmethod
-    def _is_molfile(string):
+    def is_molfile(string):
         """Test if input string is in ``Molfile`` format.
 
         :param string: Input string.
@@ -151,7 +151,7 @@ class CTfile(OrderedDict):
         return True
 
     @staticmethod
-    def _is_sdfile(string):
+    def is_sdfile(string):
         """Test if input string is in ``SDfile`` format.
 
         :param string: Input string.
