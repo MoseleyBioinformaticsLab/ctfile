@@ -362,9 +362,10 @@ class Ctab(CTfile):
 
     @property
     def iso(self, property_specifier='ISO'):
-        """
-
-        :return:
+        """Return list of isotopic properties per each atom position.
+        
+        :return: List of isotopic properties per each atom position.
+        :rtype: :py:class:`list`
         """
         isotopes = []
 
@@ -486,7 +487,21 @@ class Molfile(CTfile):
 
     @property
     def iso(self):
+        """Return list of isotopic properties per each atom position.
+        
+        :return: List of isotopic properties per each atom position.
+        :rtype: :py:class:`list`
+        """
         return self['Ctab'].iso
+
+    @property
+    def molfiles(self):
+        """Create list of ``Molfile`` instances (list of 1 in this case).
+
+        :return: List of ``Molfile`` instances.
+        :rtype: :py:class:`list` 
+        """
+        return [self]
 
 
 class SDfile(CTfile):
@@ -588,3 +603,15 @@ class SDfile(CTfile):
             output.write('$$$$\n')
 
         return output.getvalue()
+
+    @property
+    def molfiles(self):
+        """Create list of ``Molfile`` instances.
+        
+        :return: List of ``Molfile`` instances.
+        :rtype: :py:class:`list` 
+        """
+        molfiles = []
+        for index, entry in self.items():
+            molfiles.append(entry['molfile'])
+        return molfiles
