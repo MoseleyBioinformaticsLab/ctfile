@@ -44,6 +44,7 @@ setup(
     license='BSD',
     url='https://github.com/MoseleyBioinformaticsLab/ctfile',
     packages=find_packages(),
+    package_data={'ctfile': ['config_files/*.json']},
     platforms='any',
     long_description=readme(),
     install_requires=REQUIRES,
