@@ -8,7 +8,7 @@ from .api import loadstr
 from .api import read_file
 from .api import read_files
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 
 try:  # Python 2/3 compatibility code
