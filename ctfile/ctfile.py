@@ -53,7 +53,7 @@ class CTfile(OrderedDict):
 
             try:
                 molfile.update(json.loads(string))
-            except json.JSONDecodeError:
+            except ValueError:
                 molfile._build(lexer)
             return molfile
 
@@ -62,7 +62,7 @@ class CTfile(OrderedDict):
 
             try:
                 sdfile.update(json.loads(string))
-            except json.JSONDecodeError:
+            except ValueError:
                 sdfile._build(lexer)
             return sdfile
 
@@ -323,9 +323,9 @@ class Ctab(CTfile):
             elif key == 'CtabPropertiesBlock':
                 for property_name in self[key]:
                     for property_line in self[key][property_name]:
-                        output.write(property_line)
+                        output.write('{}'.format(property_line))
                         output.write('\n')
-                output.write(self.ctab_properties[self.version]['END']['fmt'])
+                output.write('{}'.format(self.ctab_properties[self.version]['END']['fmt']))
                 output.write('\n')
 
             else:
@@ -379,7 +379,7 @@ class Ctab(CTfile):
                 for entry in property_values_per_atom:
                     position, isotope = entry
                     atom_symbol = position_atom[position]
-                    isotopes.append({"atom_symbol": atom_symbol, "isotope": isotope, "position": position})
+                    isotopes.append({'atom_symbol': atom_symbol, 'isotope': isotope, 'position': position})
 
         return isotopes
 
