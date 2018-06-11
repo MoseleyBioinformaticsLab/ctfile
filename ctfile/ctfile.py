@@ -38,7 +38,7 @@ class CTfile(OrderedDict):
     def loadstr(cls, string):
         """Load data into ``CTfile`` object from string.
         
-        :param str input_str: String containing data in ``CTfile`` format.
+        :param str string: String containing data in ``CTfile`` format.
         :return: Instance of ``CTfile``.
         """
         try:
