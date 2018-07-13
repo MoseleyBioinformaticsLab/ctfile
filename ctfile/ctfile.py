@@ -610,8 +610,22 @@ class SDfile(CTfile):
     """
     def __init__(self):
         """SDfile initializer."""
-
         super(SDfile, self).__init__()
+
+    @classmethod
+    def from_molfile(cls, molfile):
+        """Construct ``SDfile`` object from ``Molfile`` object.
+        
+        :param molfile: ``Molfile`` object.
+        :type molfile: :class:`~ctfile.ctfile.Molfile`
+        :return: ``SDfile`` object.
+        :rtype: :class:`~ctfile.ctfile.SDfile`
+        """
+        sdfile = cls()
+        sdfile[1] = OrderedDict()
+        sdfile[1]['molfile'] = molfile
+        sdfile[1]['data'] = OrderedDict()
+        return sdfile
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.SDfile` instance.
