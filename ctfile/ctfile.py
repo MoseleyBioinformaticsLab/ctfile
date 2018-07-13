@@ -714,9 +714,9 @@ class Atom(OrderedDict):
         """Atom initializer.
         
         :param int atom_id: Atom id in order of appearance in ``CTfile``.
-        :param str x: x coordinate.
-        :param str y: y coordinate.
-        :param str z: z coordinate.
+        :param str x: Atom x coordinate.
+        :param str y: Atom y coordinate.
+        :param str z: Atom z coordinate.
         :param str atom_symbol: Atom symbol (type).
         :param str mass_difference: Atom mass difference.
         :param str charge: Atom charge.
@@ -794,9 +794,9 @@ class Bond(OrderedDict):
         """Bond initializer.
         
         :param first_atom: Atom object.
-        :type first_atom: :class:`~ctfile.ctfile.Atom
+        :type first_atom: :class:`~ctfile.ctfile.Atom`
         :param second_atom: Atom object.
-        :type second_atom: :class:`~ctfile.ctfile.Atom
+        :type second_atom: :class:`~ctfile.ctfile.Atom`
         :param str bond_type: Bond type.
         :param str bond_stereo: Bond stereo.
         :param str not_used1: Unused field.
