@@ -13,7 +13,8 @@ from .utils import OrderedCounter
 
 
 class CTfile(OrderedDict):
-    """Base class to represent collection of Chemical table file (``CTfile``) formats, e.g. ``Molfile``, ``SDfile``."""
+    """Base class to represent collection of Chemical table file (``CTfile``) 
+    formats, e.g. ``Molfile``, ``SDfile``."""
 
     ctab_properties = ctab_properties_conf
 
@@ -255,10 +256,12 @@ class Ctab(CTfile):
     def __init__(self):
         """Ctab initializer."""
         super(Ctab, self).__init__()
-        self["CtabCountsLine"] = OrderedDict()
-        self["CtabAtomBlock"] = []
-        self["CtabBondBlock"] = []
-        self["CtabPropertiesBlock"] = OrderedDict()
+        self['CtabCountsLine'] = OrderedDict()
+        self['CtabAtomBlock'] = []
+        self['CtabBondBlock'] = []
+        self['CtabPropertiesBlock'] = OrderedDict()
+
+        self.edges = OrderedDict()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -266,6 +269,7 @@ class Ctab(CTfile):
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`
         """
+        atom_id = 1
         while True:
             token = next(lexer)
             key = token.__class__.__name__
@@ -273,8 +277,24 @@ class Ctab(CTfile):
             if key == 'CtabCountsLine':
                 self[key].update(token._asdict())
 
-            elif key in ('CtabAtomBlock', 'CtabBondBlock'):
-                self[key].append(token._asdict())
+            elif key == 'CtabAtomBlock':
+                self[key].append(Atom(atom_id=atom_id, **token._asdict()))
+                atom_id += 1
+
+            elif key == 'CtabBondBlock':
+                first_atom_number, second_atom_number, bond_type, bond_stereo, \
+                not_used1, bond_topology, reacting_center_status = token
+
+                first_atom = self['CtabAtomBlock'][int(first_atom_number) - 1]
+                second_atom = self['CtabAtomBlock'][int(second_atom_number) - 1]
+
+                first_atom.neighbors.append(second_atom)
+                second_atom.neighbors.append(first_atom)
+
+                bond = Bond(first_atom=first_atom, second_atom=second_atom, bond_type=bond_type,
+                            bond_stereo=bond_stereo, not_used1=not_used1, bond_topology=bond_topology,
+                            reacting_center_status=reacting_center_status)
+                self[key].append(bond)
 
             elif key == 'CtabPropertiesBlock':
                 self[key].setdefault(token.name, []).append(token.line)
@@ -303,20 +323,18 @@ class Ctab(CTfile):
                 output.write('\n')
 
             elif key == 'CtabAtomBlock':
-                counter = OrderedCounter(self.atom_block_format)
-
-                for i in self[key]:
+                counter = OrderedCounter(Atom.atom_block_format)
+                for atom in self[key]:
                     atom_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(i.values(), counter.values())])
+                                         in zip(atom.values(), counter.values())])
                     output.write(atom_line)
                     output.write('\n')
 
             elif key == 'CtabBondBlock':
-                counter = OrderedCounter(self.bond_block_format)
-
-                for i in self[key]:
+                counter = OrderedCounter(Bond.bond_block_format)
+                for bond in self[key]:
                     bond_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(i.values(), counter.values())])
+                                         in zip(bond.values(), counter.values())])
                     output.write(bond_line)
                     output.write('\n')
 
@@ -349,7 +367,16 @@ class Ctab(CTfile):
         :return: List of atoms.
         :rtype: :py:class:`list`
         """
-        return [atom_line['atom_symbol'] for atom_line in self['CtabAtomBlock']]
+        return self['CtabAtomBlock']
+
+    @property
+    def bonds(self):
+        """List of atoms.
+
+        :return: List of atoms.
+        :rtype: :py:class:`list`
+        """
+        return self['CtabBondBlock']
 
     @property
     def positions(self):
@@ -383,6 +410,35 @@ class Ctab(CTfile):
 
         return isotopes
 
+    def atoms_by_symbol(self, atom_symbol):
+        """Access all atoms of specified type.
+
+        :param str atom_symbol: Atom symbol.
+        :return: List of atoms
+        :rtype: :py:class:`list`
+        """
+        return [atom for atom in self['CtabAtomBlock'] if atom['atom_symbol'] == atom_symbol]
+
+    @property
+    def carbon_atoms(self, atom_symbol='C'):
+        """Access all carbon atoms within ``Ctab`` atom block.
+        
+        :param str atom_symbol: Carbon atom symbol.
+        :return: List of carbon atoms.
+        :rtype: :py:class:`list`
+        """
+        return self.atoms_by_symbol(atom_symbol=atom_symbol)
+
+    @property
+    def hydrogen_atoms(self, atom_symbol='H'):
+        """Access all hydrogen atoms within ``Ctab`` atom block.
+
+        :param str atom_symbol: Hydrogen atom symbol.
+        :return: List of hydrogen atoms.
+        :rtype: :py:class:`list`
+        """
+        return self.atoms_by_symbol(atom_symbol=atom_symbol)
+
 
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
@@ -400,9 +456,10 @@ class Molfile(CTfile):
     """
     def __init__(self):
         """Molfile initializer."""
+
         super(Molfile, self).__init__()
-        self["HeaderBlock"] = OrderedDict()
-        self["Ctab"] = OrderedDict()
+        self['HeaderBlock'] = OrderedDict()
+        self['Ctab'] = OrderedDict()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Molfile` instance.
@@ -477,6 +534,15 @@ class Molfile(CTfile):
         return self['Ctab'].atoms
 
     @property
+    def bonds(self):
+        """List of bonds.
+
+        :return: List of bonds.
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].bonds
+
+    @property
     def positions(self):
         """List of positions of atoms in atoms block starting from 1.
         
@@ -503,6 +569,24 @@ class Molfile(CTfile):
         """
         return [self]
 
+    @property
+    def carbon_atoms(self):
+        """Access all carbon atoms within ``Ctab`` atom block.
+
+        :return: List of carbon atoms.
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].carbon_atoms
+
+    @property
+    def hydrogen_atoms(self):
+        """Access all hydrogen atoms within ``Ctab`` atom block.
+
+        :return: List of hydrogen atoms.
+        :rtype: :py:class:`list`
+        """
+        return self['Ctab'].hydrogen_atoms
+
 
 class SDfile(CTfile):
     """SDfile - each structure-data file contains structures and data for any number
@@ -525,6 +609,8 @@ class SDfile(CTfile):
     ---------------------
     """
     def __init__(self):
+        """SDfile initializer."""
+
         super(SDfile, self).__init__()
 
     def _build(self, lexer):
@@ -615,3 +701,115 @@ class SDfile(CTfile):
         for index, entry in self.items():
             molfiles.append(entry['molfile'])
         return molfiles
+
+
+class Atom(OrderedDict):
+    """Atom within ``Ctab`` block."""
+
+    atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
+
+    def __init__(self, atom_id, x, y, z, atom_symbol, mass_difference, charge, atom_stereo_parity,
+                 hydrogen_count, stereo_care_box, valence, h0designator, not_used1, not_used2,
+                 atom_atom_mapping_number, inversion_retention_flag, exact_change_flag):
+        """Atom initializer.
+        
+        :param int atom_id: Atom id in order of appearance in ``CTfile``.
+        :param str x: x coordinate.
+        :param str y: y coordinate.
+        :param str z: z coordinate.
+        :param str atom_symbol: Atom symbol (type).
+        :param str mass_difference: Atom mass difference.
+        :param str charge: Atom charge.
+        :param str atom_stereo_parity: Atom stereo parity.
+        :param str hydrogen_count: Hydrogen count.
+        :param str stereo_care_box: Atom stereo care.
+        :param str valence: Atom valence.
+        :param str h0designator: H0 designator.
+        :param str not_used1: Unused field.
+        :param str not_used2: Unused field.
+        :param str atom_atom_mapping_number: Atom-atom mapping.
+        :param str inversion_retention_flag: Inversion/retention flag.
+        :param str exact_change_flag: Exact change flag.
+        """
+        super(Atom, self).__init__()
+        self.atom_id = atom_id
+        self.neighbors = []
+        self['x'] = x
+        self['y'] = y
+        self['z'] = z
+        self['atom_symbol'] = atom_symbol
+        self['mass_difference'] = mass_difference
+        self['charge'] = charge
+        self['atom_stereo_parity'] = atom_stereo_parity
+        self['hydrogen_count'] = hydrogen_count
+        self['stereo_care_box'] = stereo_care_box
+        self['valence'] = valence
+        self['h0designator'] = h0designator
+        self['not_used1'] = not_used1
+        self['not_used2'] = not_used2
+        self['atom_atom_mapping_number'] = atom_atom_mapping_number
+        self['inversion_retention_flag'] = inversion_retention_flag
+        self['exact_change_flag'] = exact_change_flag
+
+    def neighbor_atoms(self, atom_symbol=None):
+        """Access neighbor atoms.
+        
+        :param str atom_symbol: Atom symbol.
+        :return: List of neighbor atoms.
+        :rtype: :py:class:`list`
+        """
+        if not atom_symbol:
+            return self.neighbors
+        else:
+            return [atom for atom in self.neighbors if atom['atom_symbol'] == atom_symbol]
+
+    @property
+    def neighbor_carbon_atoms(self, atom_symbol='C'):
+        """Access neighbor carbon atoms.
+        
+        :param str atom_symbol: Atom symbol.
+        :return: List of neighbor carbon atoms.
+        :rtype: :py:class:`list`
+        """
+        return self.neighbor_atoms(atom_symbol=atom_symbol)
+
+    @property
+    def neighbor_hydrogen_atoms(self, atom_symbol='H'):
+        """Access neighbor hydrogen atoms.
+        
+        :param str atom_symbol: Atom symbol.
+        :return: List of neighbor hydrogen atoms.
+        :rtype: :py:class:`list`
+        """
+        return self.neighbor_atoms(atom_symbol=atom_symbol)
+
+
+class Bond(OrderedDict):
+    """Bond that connects two atoms within ``Ctab`` block."""
+
+    bond_block_format = '111222tttsssxxxrrrccc'
+
+    def __init__(self, first_atom, second_atom, bond_type, bond_stereo,
+                 not_used1, bond_topology, reacting_center_status):
+        """Bond initializer.
+        
+        :param first_atom: Atom object.
+        :type first_atom: :class:`~ctfile.ctfile.Atom
+        :param second_atom: Atom object.
+        :type second_atom: :class:`~ctfile.ctfile.Atom
+        :param str bond_type: Bond type.
+        :param str bond_stereo: Bond stereo.
+        :param str not_used1: Unused field.
+        :param str bond_topology: Bond topology.
+        :param str reacting_center_status: Reacting center status.
+        """
+        super(Bond, self).__init__()
+        self.first_atom = first_atom
+        self.second_atom = second_atom
+        self['first_atom_number'] = first_atom.atom_id
+        self['second_atom_number'] = second_atom.atom_id
+        self['bond_type'] = bond_type
+        self['bond_stereo'] = bond_stereo
+        self['not_used1'] = not_used1
+        self['bond_topology'] = bond_topology
+        self['reacting_center_status'] = reacting_center_status
