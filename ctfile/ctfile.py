@@ -587,6 +587,11 @@ class Molfile(CTfile):
         """
         return self['Ctab'].hydrogen_atoms
 
+    @property
+    def as_sdfile(self):
+        """Create ``SDfile`` from ``Molfile``."""
+        return SDfile.from_molfile(self)
+
 
 class SDfile(CTfile):
     """SDfile - each structure-data file contains structures and data for any number
