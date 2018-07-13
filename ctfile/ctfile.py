@@ -632,6 +632,18 @@ class SDfile(CTfile):
         sdfile[1]['data'] = OrderedDict()
         return sdfile
 
+    def add_data(self, id, key, value):
+        """Add new data item.
+        
+        :param int id: Order id within ``SDfile``.
+        :param str key: Data item key.
+        :param str value: Data item value.
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        self[id]['data'].setdefault(key, [])
+        self[id]['data'][key].append(value)
+
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.SDfile` instance.
 
