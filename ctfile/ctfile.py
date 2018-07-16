@@ -876,6 +876,18 @@ class Atom(OrderedDict):
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
+    def add_data(self, id, key, value):
+        """Add new data to ``SDfile`` data block by key and value.
+
+        :param int id: Order id within ``SDfile``.
+        :param str key: Data item key.
+        :param str value: Data item value.
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        self[id]['data'].setdefault(key, [])
+        self[id]['data'][key].append(value)
+
 
 class Bond(OrderedDict):
     """Bond that connects two atoms within ``Ctab`` block."""
