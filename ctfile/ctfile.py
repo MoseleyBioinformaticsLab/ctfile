@@ -6,6 +6,7 @@ import sys
 import json
 import io
 from collections import OrderedDict
+import more_itertools
 
 from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
@@ -297,7 +298,9 @@ class Ctab(CTfile):
                 self[key].append(bond)
 
             elif key == 'CtabPropertiesBlock':
-                self[key].setdefault(token.name, []).append(token.line)
+                self[key].setdefault(token.name, [])
+                ctab_properties = token.line.split()
+                self[key][token.name].extend(ctab_properties[3:])
 
             elif key == 'CtabBlockEnd':
                 break
@@ -340,8 +343,12 @@ class Ctab(CTfile):
 
             elif key == 'CtabPropertiesBlock':
                 for property_name in self[key]:
-                    for property_line in self[key][property_name]:
-                        output.write('{}'.format(property_line))
+                    single_entry = self.ctab_properties[self.version][property_name]['values']
+                    ctab_property_identifier = self.ctab_properties[self.version][property_name]['fmt']
+
+                    for entry in more_itertools.chunked(self[key][property_name], len(single_entry)):
+                        ctab_property_line = "{}  {}{}".format(ctab_property_identifier, 1, ''.join([str(value).rjust(4) for value in entry]))
+                        output.write('{}'.format(ctab_property_line))
                         output.write('\n')
                 output.write('{}'.format(self.ctab_properties[self.version]['END']['fmt']))
                 output.write('\n')
