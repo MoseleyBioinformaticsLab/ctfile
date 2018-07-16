@@ -446,6 +446,23 @@ class Ctab(CTfile):
         """
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
 
+    def add_ctab_property(self, ctab_property_name, values):
+        """Add new values to existing ``CtabPropertiesBlock``.
+
+        :param str ctab_property_name: Name of the ``Ctab`` property.
+        :param values: Sequence of values. 
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
+            raise ValueError('Unknown property: "{}".\n'
+                             'Available Ctab properties are: {}'.format(ctab_property_name,
+                                                                        ", ".join('"{}"'.format(ctab_property) for
+                                                                                  ctab_property in ctab_properties_conf[self.version])))
+        else:
+            self['CtabPropertiesBlock'].setdefault(ctab_property_name, [])
+            self['CtabPropertiesBlock'][ctab_property_name].extend(values)
+
 
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
@@ -598,6 +615,16 @@ class Molfile(CTfile):
     def as_sdfile(self):
         """Create ``SDfile`` from ``Molfile``."""
         return SDfile.from_molfile(self)
+
+    def add_ctab_property(self, ctab_property_name, values):
+        """Add new values to existing ``CtabPropertiesBlock``.
+
+        :param str ctab_property_name: Name of the ``Ctab`` property.
+        :param values: Sequence of values. 
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        self['Ctab'].add_ctab_property(ctab_property_name=ctab_property_name, values=values)    
 
 
 class SDfile(CTfile):
