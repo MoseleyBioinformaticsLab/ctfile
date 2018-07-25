@@ -5,7 +5,7 @@
             "fmt": "M  ISO",
             "max_entries_per_line": "8",
             "default_entries_per_line": "1",
-            "values": ["position", "value"]
+            "values": ["atom_number", "absolute_mass"]
         },
 
         "CHG": {
