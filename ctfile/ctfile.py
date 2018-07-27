@@ -298,9 +298,13 @@ class Ctab(CTfile):
                 self[key].append(bond)
 
             elif key == 'CtabPropertiesBlock':
-                self[key].setdefault(token.name, [])
-                ctab_properties = token.line.split()
-                self[key][token.name].extend(ctab_properties[3:])
+                property_name = token.name
+                single_entry_keys = self.ctab_properties[self.version][property_name]['values']
+                self[key].setdefault(property_name, [])
+                ctab_properties = more_itertools.sliced(token.line.split()[3:], len(single_entry_keys))
+
+                for ctab_property in ctab_properties:
+                    self[key][property_name].append(OrderedDict(zip(single_entry_keys, ctab_property)))
 
             elif key == 'CtabBlockEnd':
                 break
@@ -343,11 +347,10 @@ class Ctab(CTfile):
 
             elif key == 'CtabPropertiesBlock':
                 for property_name in self[key]:
-                    single_entry = self.ctab_properties[self.version][property_name]['values']
                     ctab_property_identifier = self.ctab_properties[self.version][property_name]['fmt']
 
-                    for entry in more_itertools.chunked(self[key][property_name], len(single_entry)):
-                        ctab_property_line = "{}  {}{}".format(ctab_property_identifier, 1, ''.join([str(value).rjust(4) for value in entry]))
+                    for entry in self[key][property_name]:
+                        ctab_property_line = '{}  {}{}'.format(ctab_property_identifier, 1, ''.join([str(value).rjust(4) for value in entry.values()]))
                         output.write('{}'.format(ctab_property_line))
                         output.write('\n')
                 output.write('{}'.format(self.ctab_properties[self.version]['END']['fmt']))
@@ -394,6 +397,7 @@ class Ctab(CTfile):
         """
         return [str(i) for i in range(1, len(self.atoms)+1)]
 
+    # TODO: this does not work since I changed the structure, fix it
     @property
     def iso(self, property_specifier='ISO'):
         """Return list of isotopic properties per each atom position.
@@ -456,12 +460,15 @@ class Ctab(CTfile):
         """
         if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
             raise ValueError('Unknown property: "{}".\n'
-                             'Available Ctab properties are: {}'.format(ctab_property_name,
-                                                                        ", ".join('"{}"'.format(ctab_property) for
-                                                                                  ctab_property in ctab_properties_conf[self.version])))
+                             'Available Ctab properties are: {}'.format(ctab_property_name, ", ".join('"{}"'.format(ctab_property) for ctab_property in ctab_properties_conf[self.version])))
         else:
             self['CtabPropertiesBlock'].setdefault(ctab_property_name, [])
-            self['CtabPropertiesBlock'][ctab_property_name].extend(values)
+
+            single_entry_keys = self.ctab_properties[self.version][ctab_property_name]['values']
+            for value in values:
+                annotated_value = OrderedDict(zip(single_entry_keys, value))
+                if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
+                    self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
 
     def replace_ctab_property(self, ctab_property_name, values):
         """Replace with new values ``CtabPropertiesBlock``.
@@ -473,13 +480,14 @@ class Ctab(CTfile):
         """
         if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
             raise ValueError('Unknown property: "{}".\n'
-                             'Available Ctab properties are: {}'.format(ctab_property_name,
-                                                                        ', '.join('"{}"'.format(ctab_property) for
-                                                                                  ctab_property in
-                                                                                  ctab_properties_conf[self.version])))
+                             'Available Ctab properties are: {}'.format(ctab_property_name, ', '.join('"{}"'.format(ctab_property) for ctab_property in ctab_properties_conf[self.version])))
         else:
             self['CtabPropertiesBlock'][ctab_property_name] = []
-            self['CtabPropertiesBlock'][ctab_property_name].extend(values)
+            single_entry_keys = self.ctab_properties[self.version][ctab_property_name]['values']
+            for value in values:
+                annotated_value = OrderedDict(zip(single_entry_keys, value))
+                if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
+                    self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
 
 
 class Molfile(CTfile):
@@ -629,10 +637,14 @@ class Molfile(CTfile):
         """
         return self['Ctab'].hydrogen_atoms
 
-    @property
-    def as_sdfile(self):
-        """Create ``SDfile`` from ``Molfile``."""
-        return SDfile.from_molfile(self)
+    def as_sdfile(self, data=None):
+        """Create ``SDfile`` from ``Molfile``.
+        
+        :param dict data: Data associated with ``Molfile``. 
+        :return: New ``SDfile`` instance.
+        :rtype: :class:`~ctfile.ctfile.SDfile`
+        """
+        return SDfile.from_molfile(molfile=self, data=data)
 
     def add_ctab_property(self, ctab_property_name, values):
         """Add new values to existing ``CtabPropertiesBlock``.
@@ -680,31 +692,80 @@ class SDfile(CTfile):
         super(SDfile, self).__init__()
 
     @classmethod
-    def from_molfile(cls, molfile):
-        """Construct ``SDfile`` object from ``Molfile`` object.
+    def from_molfile(cls, molfile, data=None):
+        """Construct new ``SDfile`` object from ``Molfile`` object.
         
         :param molfile: ``Molfile`` object.
         :type molfile: :class:`~ctfile.ctfile.Molfile`
         :return: ``SDfile`` object.
         :rtype: :class:`~ctfile.ctfile.SDfile`
         """
+        if not data:
+            data = OrderedDict()
+
+        if not isinstance(molfile, Molfile):
+            raise ValueError('Not a Molfile type: "{}"'.format(type(molfile)))
+
+        if not isinstance(data, dict):
+            raise ValueError('Not a dict type: "{}"'.format(type(data)))
+
         sdfile = cls()
-        sdfile[1] = OrderedDict()
-        sdfile[1]['molfile'] = molfile
-        sdfile[1]['data'] = OrderedDict()
+        sdfile['1'] = OrderedDict()
+        sdfile['1']['molfile'] = molfile
+        sdfile['1']['data'] = data
         return sdfile
 
     def add_data(self, id, key, value):
         """Add new data item.
         
-        :param int id: Order id within ``SDfile``.
+        :param int id: Entry id within ``SDfile``.
         :param str key: Data item key.
         :param str value: Data item value.
         :return: None.
         :rtype: :py:obj:`None`
         """
-        self[id]['data'].setdefault(key, [])
-        self[id]['data'][key].append(value)
+        self[str(id)]['data'].setdefault(key, [])
+        self[str(id)]['data'][key].append(value)
+
+    def add_molfile(self, molfile, data):
+        """Add ``Molfile`` and data to ``SDfile`` object.
+        
+        :param molfile: ``Molfile`` instance.
+        :type molfile: :class:`~ctfile.ctfile.Molfile`
+        :param dict data: Data associated with ``Molfile`` instance. 
+        :return: None
+        :rtype: :py:obj:`None`
+        """
+        if not isinstance(molfile, Molfile):
+            raise ValueError('Not a Molfile type: "{}"'.format(type(molfile)))
+
+        if not isinstance(data, dict):
+            raise ValueError('Not a dict type: "{}"'.format(type(data)))
+
+        entry_ids = sorted(self.keys(), key=lambda x: int(x))
+        if entry_ids:
+            last_entry_id = str(entry_ids[-1])
+        else:
+            last_entry_id = '1'
+
+        new_entry_id = str(int(last_entry_id) + 1)
+        self[new_entry_id] = OrderedDict()
+        self[new_entry_id]['molfile'] = molfile
+        self[new_entry_id]['data'] = data
+
+    def add_sdfile(self, sdfile):
+        """Add new ``SDfile`` to current ``Sdfile``.
+        
+        :param sdfile: ``SDfile`` instance. 
+        :return: None
+        :rtype: :py:obj:`None`
+        """
+        if not isinstance(sdfile, SDfile):
+            raise ValueError('Not a SDfile type: "{}"'.format(type(sdfile)))
+
+        for entry_id in sdfile:
+            self.add_molfile(molfile=sdfile[entry_id]['molfile'],
+                             data=sdfile[entry_id]['data'])
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.SDfile` instance.
@@ -712,21 +773,21 @@ class SDfile(CTfile):
         :return: :class:`~ctfile.ctfile.SDfile` instance.
         :rtype: :class:`~ctfile.ctfile.SDfile`
         """
-        current_entry = 0
+        current_entry_id = 0
 
         while True:
             token = next(lexer)
             key = token.__class__.__name__
 
             if key == 'MolfileStart':
-                current_entry += 1
+                current_entry_id += 1
                 molfile = Molfile()
                 molfile._build(lexer)
-                self[current_entry] = OrderedDict(molfile=molfile, data=OrderedDict())
+                self[str(current_entry_id)] = OrderedDict(molfile=molfile, data=OrderedDict())
 
             elif key == 'DataBlockStart':
                 data_block = self._build_data_block(lexer)
-                self[current_entry]['data'].update(data_block)
+                self[str(current_entry_id)]['data'].update(data_block)
 
             elif key == 'EndOfFile':
                 break
@@ -778,8 +839,8 @@ class SDfile(CTfile):
             for header, values in entry['data'].items():
                 output.write('> <{}>\n'.format(header))
                 output.write('\n'.join(values))
-                output.write('\n\n')
-            output.write('$$$$\n')
+                output.write('\n')
+            output.write('\n$$$$\n')
 
         return output.getvalue()
 
@@ -790,10 +851,7 @@ class SDfile(CTfile):
         :return: List of ``Molfile`` instances.
         :rtype: :py:class:`list` 
         """
-        molfiles = []
-        for index, entry in self.items():
-            molfiles.append(entry['molfile'])
-        return molfiles
+        return [entry['molfile'] for entry in self.items()]
 
 
 class Atom(OrderedDict):
@@ -875,18 +933,6 @@ class Atom(OrderedDict):
         :rtype: :py:class:`list`
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
-
-    def add_data(self, id, key, value):
-        """Add new data to ``SDfile`` data block by key and value.
-
-        :param int id: Order id within ``SDfile``.
-        :param str key: Data item key.
-        :param str value: Data item value.
-        :return: None.
-        :rtype: :py:obj:`None`
-        """
-        self[id]['data'].setdefault(key, [])
-        self[id]['data'][key].append(value)
 
 
 class Bond(OrderedDict):
