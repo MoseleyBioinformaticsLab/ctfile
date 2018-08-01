@@ -397,7 +397,6 @@ class Ctab(CTfile):
         """
         return [str(i) for i in range(1, len(self.atoms)+1)]
 
-    # TODO: this does not work since I changed the structure, fix it
     @property
     def iso(self, property_specifier='ISO'):
         """Return list of isotopic properties per each atom position.
@@ -408,17 +407,15 @@ class Ctab(CTfile):
         isotopes = []
 
         if property_specifier in self['CtabPropertiesBlock']:
-            position_atom = dict(zip(self.positions, self.atoms))
+            atoms_by_position = dict(zip(self.positions, self.atoms))
 
-            for property_line in self['CtabPropertiesBlock'][property_specifier]:
-                property_values = property_line.split()[3:]
-                property_values_per_atom = [property_values[i:i+2] for i in range(0, len(property_values), 2)]
-
-                for entry in property_values_per_atom:
-                    position, isotope = entry
-                    atom_symbol = position_atom[position]
-                    isotopes.append({'atom_symbol': atom_symbol, 'isotope': isotope, 'position': position})
-
+            for iso_property in self['CtabPropertiesBlock'][property_specifier]:
+                atom = atoms_by_position[iso_property['atom_number']]
+                isotopes.append({'atom_symbol': atom['atom_symbol'],
+                                 'isotope': iso_property['absolute_mass'],
+                                 'position': iso_property['atom_number']})
+        else:
+            raise ValueError('Unknown Ctab property specifier: "{}"'.format(property_specifier))
         return isotopes
 
     def atoms_by_symbol(self, atom_symbol):
