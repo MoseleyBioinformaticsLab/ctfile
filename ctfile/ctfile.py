@@ -892,6 +892,7 @@ class Atom(object):
         self.atom_id = atom_id
         self.neighbors = []
         self._ctab_data = OrderedDict()
+        self._isotope = None
 
         self._ctab_data['x'] = x
         self._ctab_data['y'] = y
@@ -942,57 +943,13 @@ class Atom(object):
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
-    def __getitem__(self, item):
-        """Provide dict-like item access to bond ``Ctab`` data."""
-        return self._ctab_data[item]
+    @property
+    def isotope(self):
+        return self._isotope
 
-    def __setitem__(self, key, value):
-        """Provide dict-like item setting to bond ``Ctab`` data."""
-        self._ctab_data[key] = value
-
-    def __getattr__(self, item):
-        """Provide dot item access to bond ``Ctab`` data."""
-        return self._ctab_data[item]
-
-    def __str__(self):
-        """String representation of bond ``Ctab`` data."""
-        return str(self._ctab_data)
-
-    def __repr__(self):
-        """Representation of bond ``Ctab`` data."""
-        return str(self._ctab_data)
-
-
-class Bond(object):
-    """Bond that connects two atoms within ``Ctab`` block."""
-
-    bond_block_format = '111222tttsssxxxrrrccc'
-
-    def __init__(self, first_atom, second_atom, bond_type, bond_stereo,
-                 not_used1, bond_topology, reacting_center_status):
-        """Bond initializer.
-        
-        :param first_atom: Atom object.
-        :type first_atom: :class:`~ctfile.ctfile.Atom`
-        :param second_atom: Atom object.
-        :type second_atom: :class:`~ctfile.ctfile.Atom`
-        :param str bond_type: Bond type.
-        :param str bond_stereo: Bond stereo.
-        :param str not_used1: Unused field.
-        :param str bond_topology: Bond topology.
-        :param str reacting_center_status: Reacting center status.
-        """
-        self.first_atom = first_atom
-        self.second_atom = second_atom
-        self._ctab_data = OrderedDict()
-
-        self._ctab_data['first_atom_number'] = first_atom.atom_id
-        self._ctab_data['second_atom_number'] = second_atom.atom_id
-        self._ctab_data['bond_type'] = bond_type
-        self._ctab_data['bond_stereo'] = bond_stereo
-        self._ctab_data['not_used1'] = not_used1
-        self._ctab_data['bond_topology'] = bond_topology
-        self._ctab_data['reacting_center_status'] = reacting_center_status
+    @isotope.setter
+    def isotope(self, value):
+        self._isotope = value
 
     def __getitem__(self, item):
         """Provide dict-like item access to bond ``Ctab`` data."""
@@ -1049,3 +1006,57 @@ class SubstitutionAtom(Atom):
                                                atom_atom_mapping_number=atom_atom_mapping_number,
                                                inversion_retention_flag=inversion_retention_flag,
                                                exact_change_flag=exact_change_flag)
+
+
+
+
+class Bond(object):
+    """Bond that connects two atoms within ``Ctab`` block."""
+
+    bond_block_format = '111222tttsssxxxrrrccc'
+
+    def __init__(self, first_atom, second_atom, bond_type, bond_stereo,
+                 not_used1, bond_topology, reacting_center_status):
+        """Bond initializer.
+        
+        :param first_atom: Atom object.
+        :type first_atom: :class:`~ctfile.ctfile.Atom`
+        :param second_atom: Atom object.
+        :type second_atom: :class:`~ctfile.ctfile.Atom`
+        :param str bond_type: Bond type.
+        :param str bond_stereo: Bond stereo.
+        :param str not_used1: Unused field.
+        :param str bond_topology: Bond topology.
+        :param str reacting_center_status: Reacting center status.
+        """
+        self.first_atom = first_atom
+        self.second_atom = second_atom
+        self._ctab_data = OrderedDict()
+
+        self._ctab_data['first_atom_number'] = first_atom.atom_id
+        self._ctab_data['second_atom_number'] = second_atom.atom_id
+        self._ctab_data['bond_type'] = bond_type
+        self._ctab_data['bond_stereo'] = bond_stereo
+        self._ctab_data['not_used1'] = not_used1
+        self._ctab_data['bond_topology'] = bond_topology
+        self._ctab_data['reacting_center_status'] = reacting_center_status
+
+    def __getitem__(self, item):
+        """Provide dict-like item access to bond ``Ctab`` data."""
+        return self._ctab_data[item]
+
+    def __setitem__(self, key, value):
+        """Provide dict-like item setting to bond ``Ctab`` data."""
+        self._ctab_data[key] = value
+
+    def __getattr__(self, item):
+        """Provide dot item access to bond ``Ctab`` data."""
+        return self._ctab_data[item]
+
+    def __str__(self):
+        """String representation of bond ``Ctab`` data."""
+        return str(self._ctab_data)
+
+    def __repr__(self):
+        """Representation of bond ``Ctab`` data."""
+        return str(self._ctab_data)
