@@ -317,10 +317,21 @@ class Ctab(CTfile):
                     self[key][property_name].append(OrderedDict(zip(single_entry_keys, ctab_property)))
 
             elif key == 'CtabBlockEnd':
+                self._set_isotopes()
                 break
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
+
+    def _set_isotopes(self):
+        """Set isotopes for atoms.
+        
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        for iso_property in self.iso:
+            atom = self['CtabAtomBlock'][int(iso_property['atom_number'])+1]
+            atom.isotope = iso_property['isotope']
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
@@ -476,6 +487,7 @@ class Ctab(CTfile):
                 annotated_value = OrderedDict(zip(single_entry_keys, value))
                 if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
                     self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
+            self._set_isotopes()
 
     def replace_ctab_property(self, ctab_property_name, values):
         """Replace with new values ``CtabPropertiesBlock``.
@@ -495,6 +507,7 @@ class Ctab(CTfile):
                 annotated_value = OrderedDict(zip(single_entry_keys, value))
                 if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
                     self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
+            self._set_isotopes()
 
 
 class Molfile(CTfile):
