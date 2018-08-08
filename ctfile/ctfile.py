@@ -322,11 +322,6 @@ class Ctab(CTfile):
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
 
-    #     self._set_isotopes()
-    #
-    # def _set_isotopes(self):
-    #     print('========================>>?', self.iso)
-
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
 
@@ -428,7 +423,7 @@ class Ctab(CTfile):
                 atom = atoms_by_position[iso_property['atom_number']]
                 isotopes.append({'atom_symbol': atom['atom_symbol'],
                                  'isotope': iso_property['absolute_mass'],
-                                 'position': iso_property['atom_number']})
+                                 'atom_number': iso_property['atom_number']})
         else:
             raise ValueError('Unknown Ctab property specifier: "{}"'.format(property_specifier))
         return isotopes
