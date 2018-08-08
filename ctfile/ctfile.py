@@ -13,6 +13,16 @@ from .conf import ctab_properties_conf
 from .utils import OrderedCounter
 
 
+class CtabAtomBondEncoder(json.JSONEncoder):
+    """Custom serializer for Atom and Bond objects."""
+
+    def default(self, o):
+        if isinstance(o, Bond):
+            return o._ctab_data
+        else:
+            return o.__dict__
+
+
 class CTfile(OrderedDict):
     """Base class to represent collection of Chemical table file (``CTfile``) 
     formats, e.g. ``Molfile``, ``SDfile``."""
@@ -124,7 +134,7 @@ class CTfile(OrderedDict):
         :return: ``JSON`` formatted string.
         :rtype: :py:class:`str`
         """
-        return json.dumps(self, sort_keys=sort_keys, indent=indent)
+        return json.dumps(self, sort_keys=sort_keys, indent=indent, cls=CtabAtomBondEncoder)
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
