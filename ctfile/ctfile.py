@@ -17,7 +17,7 @@ class CtabAtomBondEncoder(json.JSONEncoder):
     """Custom serializer for Atom and Bond objects."""
 
     def default(self, o):
-        if isinstance(o, Bond):
+        if isinstance(o, Atom) or isinstance(o, Bond):
             return o._ctab_data
         else:
             return o.__dict__
