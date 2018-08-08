@@ -343,7 +343,7 @@ class Ctab(CTfile):
                 counter = OrderedCounter(Atom.atom_block_format)
                 for atom in self[key]:
                     atom_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(atom.values(), counter.values())])
+                                         in zip(atom._ctab_data.values(), counter.values())])
                     output.write(atom_line)
                     output.write('\n')
 
@@ -861,7 +861,7 @@ class SDfile(CTfile):
         return [entry['molfile'] for entry in self.items()]
 
 
-class Atom(OrderedDict):
+class Atom(object):
     """Atom within ``Ctab`` block."""
 
     atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
@@ -889,25 +889,26 @@ class Atom(OrderedDict):
         :param str inversion_retention_flag: Inversion/retention flag.
         :param str exact_change_flag: Exact change flag.
         """
-        super(Atom, self).__init__()
         self.atom_id = atom_id
         self.neighbors = []
-        self['x'] = x
-        self['y'] = y
-        self['z'] = z
-        self['atom_symbol'] = atom_symbol
-        self['mass_difference'] = mass_difference
-        self['charge'] = charge
-        self['atom_stereo_parity'] = atom_stereo_parity
-        self['hydrogen_count'] = hydrogen_count
-        self['stereo_care_box'] = stereo_care_box
-        self['valence'] = valence
-        self['h0designator'] = h0designator
-        self['not_used1'] = not_used1
-        self['not_used2'] = not_used2
-        self['atom_atom_mapping_number'] = atom_atom_mapping_number
-        self['inversion_retention_flag'] = inversion_retention_flag
-        self['exact_change_flag'] = exact_change_flag
+        self._ctab_data = OrderedDict()
+
+        self._ctab_data['x'] = x
+        self._ctab_data['y'] = y
+        self._ctab_data['z'] = z
+        self._ctab_data['atom_symbol'] = atom_symbol
+        self._ctab_data['mass_difference'] = mass_difference
+        self._ctab_data['charge'] = charge
+        self._ctab_data['atom_stereo_parity'] = atom_stereo_parity
+        self._ctab_data['hydrogen_count'] = hydrogen_count
+        self._ctab_data['stereo_care_box'] = stereo_care_box
+        self._ctab_data['valence'] = valence
+        self._ctab_data['h0designator'] = h0designator
+        self._ctab_data['not_used1'] = not_used1
+        self._ctab_data['not_used2'] = not_used2
+        self._ctab_data['atom_atom_mapping_number'] = atom_atom_mapping_number
+        self._ctab_data['inversion_retention_flag'] = inversion_retention_flag
+        self._ctab_data['exact_change_flag'] = exact_change_flag
 
     def neighbor_atoms(self, atom_symbol=None):
         """Access neighbor atoms.
@@ -941,6 +942,26 @@ class Atom(OrderedDict):
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
+    def __getitem__(self, item):
+        """Provide dict-like item access to bond ``Ctab`` data."""
+        return self._ctab_data[item]
+
+    def __setitem__(self, key, value):
+        """Provide dict-like item setting to bond ``Ctab`` data."""
+        self._ctab_data[key] = value
+
+    def __getattr__(self, item):
+        """Provide dot item access to bond ``Ctab`` data."""
+        return self._ctab_data[item]
+
+    def __str__(self):
+        """String representation of bond ``Ctab`` data."""
+        return str(self._ctab_data)
+
+    def __repr__(self):
+        """Representation of bond ``Ctab`` data."""
+        return str(self._ctab_data)
+
 
 class Bond(object):
     """Bond that connects two atoms within ``Ctab`` block."""
@@ -961,7 +982,10 @@ class Bond(object):
         :param str bond_topology: Bond topology.
         :param str reacting_center_status: Reacting center status.
         """
+        self.first_atom = first_atom
+        self.second_atom = second_atom
         self._ctab_data = OrderedDict()
+
         self._ctab_data['first_atom_number'] = first_atom.atom_id
         self._ctab_data['second_atom_number'] = second_atom.atom_id
         self._ctab_data['bond_type'] = bond_type
@@ -969,9 +993,6 @@ class Bond(object):
         self._ctab_data['not_used1'] = not_used1
         self._ctab_data['bond_topology'] = bond_topology
         self._ctab_data['reacting_center_status'] = reacting_center_status
-
-        self.first_atom = first_atom
-        self.second_atom = second_atom
 
     def __getitem__(self, item):
         """Provide dict-like item access to bond ``Ctab`` data."""
