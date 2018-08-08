@@ -280,7 +280,7 @@ class Ctab(CTfile):
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`
         """
-        atom_id = 1
+        atom_number = 1
         while True:
             token = next(lexer)
             key = token.__class__.__name__
@@ -289,8 +289,8 @@ class Ctab(CTfile):
                 self[key].update(token._asdict())
 
             elif key == 'CtabAtomBlock':
-                self[key].append(Atom(atom_id=atom_id, **token._asdict()))
-                atom_id += 1
+                self[key].append(Atom(atom_number=atom_number, **token._asdict()))
+                atom_number += 1
 
             elif key == 'CtabBondBlock':
                 first_atom_number, second_atom_number, bond_type, bond_stereo, \
@@ -321,6 +321,11 @@ class Ctab(CTfile):
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
+
+    #     self._set_isotopes()
+    #
+    # def _set_isotopes(self):
+    #     print('========================>>?', self.iso)
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
@@ -671,7 +676,7 @@ class Molfile(CTfile):
         :return: None.
         :rtype: :py:obj:`None`
         """
-        self['Ctab'].replace_ctab_property(ctab_property_name=ctab_property_name, values=values)
+        self['Ctab'].replace_ctab_property(ctab_property_atom_numbername=ctab_property_name, values=values)
 
 
 class SDfile(CTfile):
@@ -866,12 +871,12 @@ class Atom(object):
 
     atom_block_format = 'xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzaaaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
 
-    def __init__(self, atom_id, atom_symbol, x, y, z, mass_difference, charge, atom_stereo_parity,
+    def __init__(self, atom_number, atom_symbol, x, y, z, mass_difference, charge, atom_stereo_parity,
                  hydrogen_count, stereo_care_box, valence, h0designator, not_used1, not_used2,
                  atom_atom_mapping_number, inversion_retention_flag, exact_change_flag):
         """Atom initializer.
         
-        :param int atom_id: Atom id in order of appearance in ``CTfile``.
+        :param int atom_number: Atom id in order of appearance in ``CTfile``.
         :param str x: Atom x coordinate.
         :param str y: Atom y coordinate.
         :param str z: Atom z coordinate.
@@ -889,7 +894,7 @@ class Atom(object):
         :param str inversion_retention_flag: Inversion/retention flag.
         :param str exact_change_flag: Exact change flag.
         """
-        self.atom_id = atom_id
+        self.atom_number= atom_number
         self.neighbors = []
         self._ctab_data = OrderedDict()
         self._isotope = None
@@ -974,13 +979,13 @@ class Atom(object):
 
 class SubstitutionAtom(Atom):
 
-    def __init__(self, atom_id, atom_symbol, x=None, y=None, z=None, mass_difference=None,
+    def __init__(self, atom_number, atom_symbol, x=None, y=None, z=None, mass_difference=None,
                  charge=None, atom_stereo_parity=None, hydrogen_count=None, stereo_care_box=None,
                  valence=None, h0designator=None, not_used1=None, not_used2=None,
                  atom_atom_mapping_number=None, inversion_retention_flag=None, exact_change_flag=None):
         """Atom initializer.
 
-        :param int atom_id: Atom id in order of appearance in ``CTfile``.
+        :param int atom_number: Atom id in order of appearance in ``CTfile``.
         :param str x: Atom x coordinate.
         :param str y: Atom y coordinate.
         :param str z: Atom z coordinate.
@@ -998,7 +1003,7 @@ class SubstitutionAtom(Atom):
         :param str inversion_retention_flag: Inversion/retention flag.
         :param str exact_change_flag: Exact change flag.
         """
-        super(SubstitutionAtom, self).__init__(atom_id=atom_id, atom_symbol=atom_symbol, x=x, y=y, z=z,
+        super(SubstitutionAtom, self).__init__(atom_number=atom_number, atom_symbol=atom_symbol, x=x, y=y, z=z,
                                                mass_difference=mass_difference, charge=charge,
                                                atom_stereo_parity=atom_stereo_parity, hydrogen_count=hydrogen_count,
                                                stereo_care_box=stereo_care_box, valence=valence,
@@ -1006,8 +1011,6 @@ class SubstitutionAtom(Atom):
                                                atom_atom_mapping_number=atom_atom_mapping_number,
                                                inversion_retention_flag=inversion_retention_flag,
                                                exact_change_flag=exact_change_flag)
-
-
 
 
 class Bond(object):
@@ -1033,8 +1036,8 @@ class Bond(object):
         self.second_atom = second_atom
         self._ctab_data = OrderedDict()
 
-        self._ctab_data['first_atom_number'] = first_atom.atom_id
-        self._ctab_data['second_atom_number'] = second_atom.atom_id
+        self._ctab_data['first_atom_number'] = first_atom.atom_number
+        self._ctab_data['second_atom_number'] = second_atom.atom_number
         self._ctab_data['bond_type'] = bond_type
         self._ctab_data['bond_stereo'] = bond_stereo
         self._ctab_data['not_used1'] = not_used1
