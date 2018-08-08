@@ -3,6 +3,11 @@
 
 from filehandles import filehandles
 from .ctfile import CTfile
+from .ctfile import Ctab
+from .ctfile import Molfile
+from .ctfile import SDfile
+from .ctfile import Atom
+from .ctfile import Bond
 
 
 load = CTfile.load
