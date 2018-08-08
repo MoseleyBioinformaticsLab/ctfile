@@ -341,7 +341,7 @@ class Ctab(CTfile):
                 counter = OrderedCounter(Bond.bond_block_format)
                 for bond in self[key]:
                     bond_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(bond.values(), counter.values())])
+                                         in zip(bond._ctab_data.values(), counter.values())])
                     output.write(bond_line)
                     output.write('\n')
 
@@ -932,7 +932,7 @@ class Atom(OrderedDict):
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
 
-class Bond(OrderedDict):
+class Bond(object):
     """Bond that connects two atoms within ``Ctab`` block."""
 
     bond_block_format = '111222tttsssxxxrrrccc'
@@ -951,13 +951,29 @@ class Bond(OrderedDict):
         :param str bond_topology: Bond topology.
         :param str reacting_center_status: Reacting center status.
         """
-        super(Bond, self).__init__()
+        self._ctab_data = OrderedDict()
+        self._ctab_data['first_atom_number'] = first_atom.atom_id
+        self._ctab_data['second_atom_number'] = second_atom.atom_id
+        self._ctab_data['bond_type'] = bond_type
+        self._ctab_data['bond_stereo'] = bond_stereo
+        self._ctab_data['not_used1'] = not_used1
+        self._ctab_data['bond_topology'] = bond_topology
+        self._ctab_data['reacting_center_status'] = reacting_center_status
+
         self.first_atom = first_atom
         self.second_atom = second_atom
-        self['first_atom_number'] = first_atom.atom_id
-        self['second_atom_number'] = second_atom.atom_id
-        self['bond_type'] = bond_type
-        self['bond_stereo'] = bond_stereo
-        self['not_used1'] = not_used1
-        self['bond_topology'] = bond_topology
-        self['reacting_center_status'] = reacting_center_status
+
+    def __getitem__(self, item):
+        return self._ctab_data[item]
+
+    def __setitem__(self, key, value):
+        self._ctab_data[key] = value
+
+    def __getattr__(self, item):
+        return self._ctab_data[item]
+
+    def __str__(self):
+        return str(self._ctab_data)
+
+    def __repr__(self):
+        return str(self)
