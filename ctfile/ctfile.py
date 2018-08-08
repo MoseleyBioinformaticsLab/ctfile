@@ -676,7 +676,7 @@ class Molfile(CTfile):
         :return: None.
         :rtype: :py:obj:`None`
         """
-        self['Ctab'].replace_ctab_property(ctab_property_atom_numbername=ctab_property_name, values=values)
+        self['Ctab'].replace_ctab_property(ctab_property_name=ctab_property_name, values=values)
 
 
 class SDfile(CTfile):
