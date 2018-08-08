@@ -964,16 +964,21 @@ class Bond(object):
         self.second_atom = second_atom
 
     def __getitem__(self, item):
+        """Provide dict-like item access to bond ``Ctab`` data."""
         return self._ctab_data[item]
 
     def __setitem__(self, key, value):
+        """Provide dict-like item setting to bond ``Ctab`` data."""
         self._ctab_data[key] = value
 
     def __getattr__(self, item):
+        """Provide dot item access to bond ``Ctab`` data."""
         return self._ctab_data[item]
 
     def __str__(self):
+        """String representation of bond ``Ctab`` data."""
         return str(self._ctab_data)
 
     def __repr__(self):
-        return str(self)
+        """Representation of bond ``Ctab`` data."""
+        return str(self._ctab_data)
