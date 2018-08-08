@@ -435,8 +435,6 @@ class Ctab(CTfile):
                 isotopes.append({'atom_symbol': atom['atom_symbol'],
                                  'isotope': iso_property['absolute_mass'],
                                  'atom_number': iso_property['atom_number']})
-        else:
-            raise ValueError('Unknown Ctab property specifier: "{}"'.format(property_specifier))
         return isotopes
 
     def atoms_by_symbol(self, atom_symbol):
