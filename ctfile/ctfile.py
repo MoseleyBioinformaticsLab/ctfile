@@ -983,42 +983,6 @@ class Atom(object):
         return str(self._ctab_data)
 
 
-class SubstitutionAtom(Atom):
-
-    def __init__(self, atom_number, atom_symbol, x=None, y=None, z=None, mass_difference=None,
-                 charge=None, atom_stereo_parity=None, hydrogen_count=None, stereo_care_box=None,
-                 valence=None, h0designator=None, not_used1=None, not_used2=None,
-                 atom_atom_mapping_number=None, inversion_retention_flag=None, exact_change_flag=None):
-        """Atom initializer.
-
-        :param int atom_number: Atom id in order of appearance in ``CTfile``.
-        :param str x: Atom x coordinate.
-        :param str y: Atom y coordinate.
-        :param str z: Atom z coordinate.
-        :param str atom_symbol: Atom symbol (type).
-        :param str mass_difference: Atom mass difference.
-        :param str charge: Atom charge.
-        :param str atom_stereo_parity: Atom stereo parity.
-        :param str hydrogen_count: Hydrogen count.
-        :param str stereo_care_box: Atom stereo care.
-        :param str valence: Atom valence.
-        :param str h0designator: H0 designator.
-        :param str not_used1: Unused field.
-        :param str not_used2: Unused field.
-        :param str atom_atom_mapping_number: Atom-atom mapping.
-        :param str inversion_retention_flag: Inversion/retention flag.
-        :param str exact_change_flag: Exact change flag.
-        """
-        super(SubstitutionAtom, self).__init__(atom_number=atom_number, atom_symbol=atom_symbol, x=x, y=y, z=z,
-                                               mass_difference=mass_difference, charge=charge,
-                                               atom_stereo_parity=atom_stereo_parity, hydrogen_count=hydrogen_count,
-                                               stereo_care_box=stereo_care_box, valence=valence,
-                                               h0designator=h0designator, not_used1=not_used1, not_used2=not_used2,
-                                               atom_atom_mapping_number=atom_atom_mapping_number,
-                                               inversion_retention_flag=inversion_retention_flag,
-                                               exact_change_flag=exact_change_flag)
-
-
 class Bond(object):
     """Bond that connects two atoms within ``Ctab`` block."""
 
