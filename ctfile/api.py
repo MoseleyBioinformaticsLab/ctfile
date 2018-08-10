@@ -8,7 +8,6 @@ from .ctfile import Molfile
 from .ctfile import SDfile
 from .ctfile import Atom
 from .ctfile import Bond
-from .ctfile import SubstitutionAtom
 
 
 load = CTfile.load

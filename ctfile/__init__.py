@@ -12,7 +12,6 @@ from .api import Molfile
 from .api import SDfile
 from .api import Atom
 from .api import Bond
-from .api import SubstitutionAtom
 
 
 __version__ = '0.1.5dev'
