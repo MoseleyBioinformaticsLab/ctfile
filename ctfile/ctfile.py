@@ -289,7 +289,7 @@ class Ctab(CTfile):
                 self[key].update(token._asdict())
 
             elif key == 'CtabAtomBlock':
-                self[key].append(Atom(atom_number=atom_number, **token._asdict()))
+                self[key].append(Atom(atom_number=str(atom_number), **token._asdict()))
                 atom_number += 1
 
             elif key == 'CtabBondBlock':
@@ -882,7 +882,7 @@ class Atom(object):
                  atom_atom_mapping_number, inversion_retention_flag, exact_change_flag):
         """Atom initializer.
         
-        :param int atom_number: Atom id in order of appearance in ``CTfile``.
+        :param str atom_number: Atom id in order of appearance in ``CTfile``.
         :param str x: Atom x coordinate.
         :param str y: Atom y coordinate.
         :param str z: Atom z coordinate.
