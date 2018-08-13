@@ -317,21 +317,10 @@ class Ctab(CTfile):
                     self[key][property_name].append(OrderedDict(zip(single_entry_keys, ctab_property)))
 
             elif key == 'CtabBlockEnd':
-                self._set_isotopes()
                 break
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
-
-    def _set_isotopes(self):
-        """Set isotopes for atoms.
-        
-        :return: None.
-        :rtype: :py:obj:`None`
-        """
-        for iso_property in self.iso:
-            atom = self['CtabAtomBlock'][int(iso_property['atom_number'])+1]
-            atom.isotope = iso_property['isotope']
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
@@ -485,7 +474,6 @@ class Ctab(CTfile):
                 annotated_value = OrderedDict(zip(single_entry_keys, value))
                 if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
                     self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
-            self._set_isotopes()
 
     def replace_ctab_property(self, ctab_property_name, values):
         """Replace with new values ``CtabPropertiesBlock``.
@@ -505,7 +493,6 @@ class Ctab(CTfile):
                 annotated_value = OrderedDict(zip(single_entry_keys, value))
                 if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
                     self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
-            self._set_isotopes()
 
 
 class Molfile(CTfile):
@@ -903,7 +890,6 @@ class Atom(object):
         self.atom_number= atom_number
         self.neighbors = []
         self._ctab_data = OrderedDict()
-        self._isotope = None
 
         self._ctab_data['x'] = x
         self._ctab_data['y'] = y
@@ -953,14 +939,6 @@ class Atom(object):
         :rtype: :py:class:`list`
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
-
-    @property
-    def isotope(self):
-        return self._isotope
-
-    @isotope.setter
-    def isotope(self, value):
-        self._isotope = value
 
     def __getitem__(self, item):
         """Provide dict-like item access to bond ``Ctab`` data."""
