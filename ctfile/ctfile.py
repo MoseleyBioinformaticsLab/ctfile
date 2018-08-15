@@ -13,16 +13,6 @@ from .conf import ctab_properties_conf
 from .utils import OrderedCounter
 
 
-class CtabAtomBondEncoder(json.JSONEncoder):
-    """Custom serializer for Atom and Bond objects."""
-
-    def default(self, o):
-        if isinstance(o, Atom) or isinstance(o, Bond):
-            return o._ctab_data
-        else:
-            return o.__dict__
-
-
 class CTfile(OrderedDict):
     """Base class to represent collection of Chemical table file (``CTfile``) 
     formats, e.g. ``Molfile``, ``SDfile``."""
@@ -1011,3 +1001,20 @@ class Bond(object):
     def __repr__(self):
         """Representation of bond ``Ctab`` data."""
         return str(self._ctab_data)
+
+
+class CtabAtomBondEncoder(json.JSONEncoder):
+    """Custom serializer for Atom and Bond objects."""
+
+    def default(self, o):
+        """Default encoder.
+
+        :param o: Atom or Bond instance.
+        :type o: :class:`~ctfile.ctfile.Atom` or :class:`~ctfile.ctfile.Bond`.
+        :return: Dictionary that contains information required for atom and bond block of ``Ctab``.
+        :rtype: :py:class:`collections.OrderedDict`
+        """
+        if isinstance(o, Atom) or isinstance(o, Bond):
+            return o._ctab_data
+        else:
+            return o.__dict__
