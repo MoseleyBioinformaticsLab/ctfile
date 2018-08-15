@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 #  -*- coding: utf-8 -*-
 
+"""
+ctfile.conf
+~~~~~~~~~~~
+
+This module reads in configuration file.
+"""
+
 import os
 import json
 
