@@ -26,7 +26,6 @@ This package includes the following modules:
     This module provides reusable utility functions and objects.
 """
 
-
 import logging
 
 from .api import load
@@ -40,7 +39,7 @@ from .api import Atom
 from .api import Bond
 
 
-__version__ = '0.1.5dev'
+__version__ = '0.1.5'
 
 
 try:  # Python 2/3 compatibility code
