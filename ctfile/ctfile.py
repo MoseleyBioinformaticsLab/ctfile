@@ -8,12 +8,12 @@ ctfile.ctfile
 This module implements core objects to represent ``CTfile`` file format.
 """
 
-
 from __future__ import print_function, division, unicode_literals
 import sys
 import json
 import io
 from collections import OrderedDict
+
 import more_itertools
 
 from .tokenizer import tokenizer
@@ -374,7 +374,7 @@ class Ctab(CTfile):
         """Version of the `CTfile` formatting.
         
         :return: Version of the `CTfile`.
-        :rtype: str
+        :rtype: :py:class:`str`
         """
         return self['CtabCountsLine']['version']
 
@@ -573,7 +573,7 @@ class Molfile(CTfile):
         """Version of the `CTfile` formatting.
 
         :return: Version of the `CTfile`.
-        :rtype: str
+        :rtype: :py:class:`str`
         """
         return self['Ctab'].version
 
@@ -721,7 +721,7 @@ class SDfile(CTfile):
     def add_data(self, id, key, value):
         """Add new data item.
         
-        :param int id: Entry id within ``SDfile``.
+        :param str id: Entry id within ``SDfile``.
         :param str key: Data item key.
         :param str value: Data item value.
         :return: None.
@@ -736,7 +736,7 @@ class SDfile(CTfile):
         :param molfile: ``Molfile`` instance.
         :type molfile: :class:`~ctfile.ctfile.Molfile`
         :param dict data: Data associated with ``Molfile`` instance. 
-        :return: None
+        :return: None.
         :rtype: :py:obj:`None`
         """
         if not isinstance(molfile, Molfile):
@@ -939,23 +939,23 @@ class Atom(object):
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
     def __getitem__(self, item):
-        """Provide dict-like item access to bond ``Ctab`` data."""
+        """Provide dict-like item access to atom ``Ctab`` data."""
         return self._ctab_data[item]
 
     def __setitem__(self, key, value):
-        """Provide dict-like item setting to bond ``Ctab`` data."""
+        """Provide dict-like item setting to atom ``Ctab`` data."""
         self._ctab_data[key] = value
 
     def __getattr__(self, item):
-        """Provide dot item access to bond ``Ctab`` data."""
+        """Provide dot item access to atom ``Ctab`` data."""
         return self._ctab_data[item]
 
     def __str__(self):
-        """String representation of bond ``Ctab`` data."""
+        """String representation of atom ``Ctab`` data."""
         return str(self._ctab_data)
 
     def __repr__(self):
-        """Representation of bond ``Ctab`` data."""
+        """Representation of atom ``Ctab`` data."""
         return str(self._ctab_data)
 
 
