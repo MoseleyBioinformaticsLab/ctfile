@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+ctfile.tokenizer
+~~~~~~~~~~~~~~~~
+
+This module implements tokenizer that processes text file and yields 
+tokens necessary to create ``CTfile`` objects.
+"""
+
 from __future__ import print_function, division, unicode_literals
 from collections import deque
 from collections import namedtuple
