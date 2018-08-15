@@ -14,6 +14,8 @@ Release History
 - Added "Bond" object as part of ``Ctab`` block.
 - Added custom serializer for "Atom" and "Bond" objects.
 - Added module-level documentation.
+- Improved representation of ``Ctab`` properties block.
+- Improved ``Ctab`` properties configuration file.
 
 
 0.1.4 (2018-04-18)
