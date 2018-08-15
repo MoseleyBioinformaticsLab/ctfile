@@ -3,6 +3,19 @@
 Release History
 ===============
 
+
+0.1.5 (2018-08-15)
+~~~~~~~~~~~~~~~~~~
+
+**Improvements**
+
+- Added "Atom" object as part of ``Ctab`` block that contains information
+  about neighbor atoms and additional functionality.
+- Added "Bond" object as part of ``Ctab`` block.
+- Added custom serializer for "Atom" and "Bond" objects.
+- Added module-level documentation.
+
+
 0.1.4 (2018-04-18)
 ~~~~~~~~~~~~~~~~~~
 
