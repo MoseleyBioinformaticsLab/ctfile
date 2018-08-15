@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+ctfile.api
+~~~~~~~~~~
+
+This module provides core API functions and objects.
+"""
+
 from filehandles import filehandles
 from .ctfile import CTfile
 from .ctfile import Ctab
