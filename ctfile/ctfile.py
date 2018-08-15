@@ -856,7 +856,7 @@ class SDfile(CTfile):
         :return: List of ``Molfile`` instances.
         :rtype: :py:class:`list` 
         """
-        return [entry['molfile'] for entry in self.items()]
+        return [entry['molfile'] for entry in self.values()]
 
 
 class Atom(object):
