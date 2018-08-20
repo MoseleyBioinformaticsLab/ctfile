@@ -4,6 +4,20 @@ Release History
 ===============
 
 
+0.1.6 (2018-08-20)
+~~~~~~~~~~~~~~~~~~
+
+**Improvements**
+
+- Added new functionality to add charge to "N", "O", and "S" atoms
+  within neutral molecules.
+
+**Bugfixes**
+
+- Fixed bug where numeration within ``SDfile`` starts
+  from "2" instead of "1".
+
+
 0.1.5 (2018-08-15)
 ~~~~~~~~~~~~~~~~~~
 
