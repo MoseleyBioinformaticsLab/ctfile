@@ -31,7 +31,7 @@ class CTfile(OrderedDict):
         """CTfile initializer.
         
         :param lexer: instance of the ``CTfile`` format tokenizer.
-        :type lexer: :func:`~ctfile.tokenizer.tokenizer`
+        :type lexer: :func:`~ctfile.tokenizer.tokenizer`.
         """
         super(CTfile, self).__init__(*args, **kwargs)
 
@@ -85,7 +85,7 @@ class CTfile(OrderedDict):
         :param filehandle: File-like object.
         :param str file_format: Format to use to write data: ``ctfile`` or ``json``.
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         try:
             filehandle.write(self.writestr(file_format=file_format))
@@ -97,7 +97,7 @@ class CTfile(OrderedDict):
         
         :param str file_format: Format to use to write data: ``ctfile`` or ``json``.
         :return: String representing the :class:`~ctfile.ctfile.CTfile` instance.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         if file_format == 'json':
             repr_str = self._to_json()
@@ -114,7 +114,7 @@ class CTfile(OrderedDict):
         :param f: Print to file or stdout.
         :type f: File-like 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         print(self.writestr(file_format=file_format), file=f)
 
@@ -122,7 +122,7 @@ class CTfile(OrderedDict):
         """Build :class:`~ctfile.ctfile.CTfile` instance.
 
         :return: :class:`~ctfile.ctfile.CTfile` instance.
-        :rtype: :class:`~ctfile.ctfile.CTfile`
+        :rtype: :class:`~ctfile.ctfile.CTfile`.
         """
         raise NotImplementedError('Subclass must implement abstract method')
 
@@ -130,7 +130,7 @@ class CTfile(OrderedDict):
         """Convert :class:`~ctfile.ctfile.CTfile` into JSON string.
 
         :return: ``JSON`` formatted string.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         return json.dumps(self, sort_keys=sort_keys, indent=indent, cls=CtabAtomBondEncoder)
 
@@ -138,7 +138,7 @@ class CTfile(OrderedDict):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
         
         :return: ``CTfile`` formatted string.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         raise NotImplementedError('Subclass must implement abstract method')
 
@@ -147,9 +147,9 @@ class CTfile(OrderedDict):
         """Test if input string is in ``Molfile`` format.
 
         :param string: Input string.
-        :type string: :py:class:`str` or :py:class:`bytes`
+        :type string: :py:class:`str` or :py:class:`bytes`.
         :return: Input string if in ``Molfile`` format or False otherwise.
-        :rtype: :py:class:`str` or :py:obj:`False`
+        :rtype: :py:class:`str` or :py:obj:`False`.
         """
         try:
             string = string.decode('utf-8')
@@ -165,9 +165,9 @@ class CTfile(OrderedDict):
         """Test if input string is in ``SDfile`` format.
 
         :param string: Input string.
-        :type string: :py:class:`str` or :py:class:`bytes`
+        :type string: :py:class:`str` or :py:class:`bytes`.
         :return: Input string if in ``SDfile`` format or False otherwise.
-        :rtype: :py:class:`str` or :py:obj:`False`
+        :rtype: :py:class:`str` or :py:obj:`False`.
         """
         try:
             string = string.decode('utf-8')
@@ -276,7 +276,7 @@ class Ctab(CTfile):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
         
         :return: :class:`~ctfile.ctfile.Ctab` instance.
-        :rtype: :class:`~ctfile.ctfile.Ctab`
+        :rtype: :class:`~ctfile.ctfile.Ctab`.
         """
         atom_number = 1
         while True:
@@ -324,7 +324,7 @@ class Ctab(CTfile):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
 
         :return: `CTfile` formatted string.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         output = io.StringIO()
 
@@ -374,7 +374,7 @@ class Ctab(CTfile):
         """Version of the `CTfile` formatting.
         
         :return: Version of the `CTfile`.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         return self['CtabCountsLine']['version']
 
@@ -383,7 +383,7 @@ class Ctab(CTfile):
         """List of atoms.
 
         :return: List of atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['CtabAtomBlock']
 
@@ -392,7 +392,7 @@ class Ctab(CTfile):
         """List of atoms.
 
         :return: List of atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['CtabBondBlock']
 
@@ -401,7 +401,7 @@ class Ctab(CTfile):
         """List of positions of atoms in atoms block starting from 1.
         
         :return: List of positions of atoms in atoms block starting from 1. 
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return [str(i) for i in range(1, len(self.atoms)+1)]
 
@@ -410,7 +410,7 @@ class Ctab(CTfile):
         """Return list of isotopic properties per each atom position.
         
         :return: List of isotopic properties per each atom position.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         isotopes = []
 
@@ -428,8 +428,8 @@ class Ctab(CTfile):
         """Access all atoms of specified type.
 
         :param str atom_symbol: Atom symbol.
-        :return: List of atoms
-        :rtype: :py:class:`list`
+        :return: List of atoms.
+        :rtype: :py:class:`list`.
         """
         return [atom for atom in self['CtabAtomBlock'] if atom['atom_symbol'] == atom_symbol]
 
@@ -439,7 +439,7 @@ class Ctab(CTfile):
         
         :param str atom_symbol: Carbon atom symbol.
         :return: List of carbon atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
 
@@ -449,7 +449,7 @@ class Ctab(CTfile):
 
         :param str atom_symbol: Hydrogen atom symbol.
         :return: List of hydrogen atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
 
@@ -459,7 +459,7 @@ class Ctab(CTfile):
         :param str ctab_property_name: Name of the ``Ctab`` property.
         :param values: Sequence of values. 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
             raise ValueError('Unknown property: "{}".\n'
@@ -479,7 +479,7 @@ class Ctab(CTfile):
         :param str ctab_property_name: Name of the ``Ctab`` property.
         :param values: Sequence of values. 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
             raise ValueError('Unknown property: "{}".\n'
@@ -491,6 +491,93 @@ class Ctab(CTfile):
                 annotated_value = OrderedDict(zip(single_entry_keys, value))
                 if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
                     self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
+
+    def add_charge(self, atom_number, atom_symbol, charge):
+        """Add charge to neutral "N", "O", or "S".
+        
+        :param str atom_number: Atom id in order of appearance in ``CTfile``.
+        :param str atom_symbol: Atom symbol.
+        :param str charge: Charge: "+1" or "-1".
+        :return: None.
+        :rtype: :py:obj:`None`.
+        """
+        atom = self['CtabAtomBlock'][int(atom_number)-1]
+
+        if atom.atom_symbol != atom_symbol:
+            raise ValueError('Mismatch between atom symbol and atom number.')
+
+        if atom.atom_symbol not in {'N', 'O', 'S'}:
+            raise ValueError('Cannot ionize atom: "{}"'.format(atom.atom_symbol))
+
+        if int(charge) == 1:
+            hydrogen = Atom(atom_number=str(len(self['CtabAtomBlock'])+1),
+                            atom_symbol='H',
+                            x='0.0000',
+                            y='0.0000',
+                            z='0.0000',
+                            mass_difference='0',
+                            charge='0',
+                            atom_stereo_parity='0',
+                            hydrogen_count='0',
+                            stereo_care_box='0',
+                            valence='0',
+                            h0designator='0',
+                            not_used1='0',
+                            not_used2='0',
+                            atom_atom_mapping_number='0',
+                            inversion_retention_flag='0',
+                            exact_change_flag='0')
+
+            bond = Bond(first_atom=atom,
+                        second_atom=hydrogen,
+                        bond_type='1',
+                        bond_stereo='0',
+                        not_used1='0',
+                        bond_topology='0',
+                        reacting_center_status='0')
+
+            self['CtabAtomBlock'].append(hydrogen)
+            self['CtabBondBlock'].append(bond)
+
+        elif int(charge) == -1:
+            terminal_hydrogens = atom.neighbor_hydrogen_atoms
+
+            if len(terminal_hydrogens) == 1:
+                hydrogen = terminal_hydrogens[0]
+                remove_index = []
+
+                # update atom numbers
+                for atom in self['CtabAtomBlock']:
+                    if int(atom.atom_number) > int(hydrogen.atom_number):
+                        atom.atom_number = str(int(atom.atom_number)-1)
+
+                # find index of a bond to remove and update ctab data dict with new atom numbers
+                for index, bond in enumerate(self['CtabBondBlock']):
+                    if hydrogen.atom_number in {bond.first_atom_number, bond.second_atom_number}:
+                        remove_index.append(index)
+                    bond.update_atom_numbers()
+
+                if len(remove_index) != 1:
+                    raise ValueError('Removing more than one bond! Operation is not permitted.')
+                else:
+                    # remove atom from neighbors list
+                    for atom in self['CtabAtomBlock']:
+                        if hydrogen in atom.neighbors:
+                            atom.neighbors.remove(hydrogen)
+
+                    # remove atom and bond from Ctab
+                    self['CtabAtomBlock'].pop(int(hydrogen.atom_number)-1)
+                    self['CtabBondBlock'].pop(remove_index[0])
+            else:
+                raise ValueError('Atom "{}{}" has incorrect number of terminal hydrogens.'.format(atom.atom_symbol, atom.atom_number))
+
+        else:
+            raise ValueError('Can only handle charges "+1" and "-1".')
+
+        # update atom and bond counts
+        self['CtabCountsLine']['number_of_atoms'] = str(len(self['CtabAtomBlock']))
+        self['CtabCountsLine']['number_of_bonds'] = str(len(self['CtabBondBlock']))
+        self.add_ctab_property(ctab_property_name='CHG', values=[(str(atom_number), str(charge))])
 
 
 class Molfile(CTfile):
@@ -518,7 +605,7 @@ class Molfile(CTfile):
         """Build :class:`~ctfile.ctfile.Molfile` instance.
 
         :return: :class:`~ctfile.ctfile.Molfile` instance.
-        :rtype: :class:`~ctfile.ctfile.Molfile`
+        :rtype: :class:`~ctfile.ctfile.Molfile`.
         """
         key = ''
         while key != 'EndOfFile':
@@ -549,7 +636,7 @@ class Molfile(CTfile):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
 
         :return: ``CTfile`` formatted string.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         output = io.StringIO()
 
@@ -573,7 +660,7 @@ class Molfile(CTfile):
         """Version of the `CTfile` formatting.
 
         :return: Version of the `CTfile`.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         return self['Ctab'].version
 
@@ -582,7 +669,7 @@ class Molfile(CTfile):
         """List of atoms.
 
         :return: List of atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].atoms
 
@@ -591,7 +678,7 @@ class Molfile(CTfile):
         """List of bonds.
 
         :return: List of bonds.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].bonds
 
@@ -600,7 +687,7 @@ class Molfile(CTfile):
         """List of positions of atoms in atoms block starting from 1.
         
         :return: List of positions of atoms in atoms block starting from 1. 
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].positions
 
@@ -609,7 +696,7 @@ class Molfile(CTfile):
         """Return list of isotopic properties per each atom position.
         
         :return: List of isotopic properties per each atom position.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].iso
 
@@ -618,7 +705,7 @@ class Molfile(CTfile):
         """Create list of ``Molfile`` instances (list of 1 in this case).
 
         :return: List of ``Molfile`` instances.
-        :rtype: :py:class:`list` 
+        :rtype: :py:class:`list`.
         """
         return [self]
 
@@ -627,7 +714,7 @@ class Molfile(CTfile):
         """Access all carbon atoms within ``Ctab`` atom block.
 
         :return: List of carbon atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].carbon_atoms
 
@@ -636,7 +723,7 @@ class Molfile(CTfile):
         """Access all hydrogen atoms within ``Ctab`` atom block.
 
         :return: List of hydrogen atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self['Ctab'].hydrogen_atoms
 
@@ -645,7 +732,7 @@ class Molfile(CTfile):
         
         :param dict data: Data associated with ``Molfile``. 
         :return: New ``SDfile`` instance.
-        :rtype: :class:`~ctfile.ctfile.SDfile`
+        :rtype: :class:`~ctfile.ctfile.SDfile`.
         """
         return SDfile.from_molfile(molfile=self, data=data)
 
@@ -655,7 +742,7 @@ class Molfile(CTfile):
         :param str ctab_property_name: Name of the ``Ctab`` property.
         :param values: Sequence of values. 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         self['Ctab'].add_ctab_property(ctab_property_name=ctab_property_name, values=values)
 
@@ -665,9 +752,20 @@ class Molfile(CTfile):
         :param str ctab_property_name: Name of the ``Ctab`` property.
         :param values: Sequence of values. 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         self['Ctab'].replace_ctab_property(ctab_property_name=ctab_property_name, values=values)
+
+    def add_charge(self, atom_number, atom_symbol, charge):
+        """Add charge to neutral "N", "O", or "S".
+
+        :param str atom_number: Atom id in order of appearance in ``CTfile``.
+        :param str atom_symbol: Atom symbol.
+        :param str charge: Charge: "+1" or "-1".
+        :return: None.
+        :rtype: :py:obj:`None`.
+        """
+        self['Ctab'].add_charge(atom_number=atom_number, atom_symbol=atom_symbol, charge=charge)
 
 
 class SDfile(CTfile):
@@ -699,9 +797,9 @@ class SDfile(CTfile):
         """Construct new ``SDfile`` object from ``Molfile`` object.
         
         :param molfile: ``Molfile`` object.
-        :type molfile: :class:`~ctfile.ctfile.Molfile`
+        :type molfile: :class:`~ctfile.ctfile.Molfile`.
         :return: ``SDfile`` object.
-        :rtype: :class:`~ctfile.ctfile.SDfile`
+        :rtype: :class:`~ctfile.ctfile.SDfile`.
         """
         if not data:
             data = OrderedDict()
@@ -725,7 +823,7 @@ class SDfile(CTfile):
         :param str key: Data item key.
         :param str value: Data item value.
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         self[str(id)]['data'].setdefault(key, [])
         self[str(id)]['data'][key].append(value)
@@ -734,10 +832,10 @@ class SDfile(CTfile):
         """Add ``Molfile`` and data to ``SDfile`` object.
         
         :param molfile: ``Molfile`` instance.
-        :type molfile: :class:`~ctfile.ctfile.Molfile`
+        :type molfile: :class:`~ctfile.ctfile.Molfile`.
         :param dict data: Data associated with ``Molfile`` instance. 
         :return: None.
-        :rtype: :py:obj:`None`
+        :rtype: :py:obj:`None`.
         """
         if not isinstance(molfile, Molfile):
             raise ValueError('Not a Molfile type: "{}"'.format(type(molfile)))
@@ -749,7 +847,7 @@ class SDfile(CTfile):
         if entry_ids:
             last_entry_id = str(entry_ids[-1])
         else:
-            last_entry_id = '1'
+            last_entry_id = '0'
 
         new_entry_id = str(int(last_entry_id) + 1)
         self[new_entry_id] = OrderedDict()
@@ -757,11 +855,11 @@ class SDfile(CTfile):
         self[new_entry_id]['data'] = data
 
     def add_sdfile(self, sdfile):
-        """Add new ``SDfile`` to current ``Sdfile``.
+        """Add new ``SDfile`` to current ``SDfile``.
         
         :param sdfile: ``SDfile`` instance. 
-        :return: None
-        :rtype: :py:obj:`None`
+        :return: None.
+        :rtype: :py:obj:`None`.
         """
         if not isinstance(sdfile, SDfile):
             raise ValueError('Not a SDfile type: "{}"'.format(type(sdfile)))
@@ -774,7 +872,7 @@ class SDfile(CTfile):
         """Build :class:`~ctfile.ctfile.SDfile` instance.
 
         :return: :class:`~ctfile.ctfile.SDfile` instance.
-        :rtype: :class:`~ctfile.ctfile.SDfile`
+        :rtype: :class:`~ctfile.ctfile.SDfile`.
         """
         current_entry_id = 0
 
@@ -804,7 +902,7 @@ class SDfile(CTfile):
         """Build the data block of :class:`~ctfile.ctfile.SDfile` instance. 
         
         :return: Data block.
-        :rtype: :py:class:`collections.OrderedDict`
+        :rtype: :py:class:`collections.OrderedDict`.
         """
         data_block = OrderedDict()
         header = ''
@@ -832,7 +930,7 @@ class SDfile(CTfile):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
 
         :return: ``CTfile`` formatted string.
-        :rtype: :py:class:`str`
+        :rtype: :py:class:`str`.
         """
         output = io.StringIO()
 
@@ -852,7 +950,7 @@ class SDfile(CTfile):
         """Create list of ``Molfile`` instances.
         
         :return: List of ``Molfile`` instances.
-        :rtype: :py:class:`list` 
+        :rtype: :py:class:`list`. 
         """
         return [entry['molfile'] for entry in self.values()]
 
@@ -868,10 +966,10 @@ class Atom(object):
         """Atom initializer.
         
         :param str atom_number: Atom id in order of appearance in ``CTfile``.
+        :param str atom_symbol: Atom symbol.
         :param str x: Atom x coordinate.
         :param str y: Atom y coordinate.
         :param str z: Atom z coordinate.
-        :param str atom_symbol: Atom symbol (type).
         :param str mass_difference: Atom mass difference.
         :param str charge: Atom charge.
         :param str atom_stereo_parity: Atom stereo parity.
@@ -885,7 +983,7 @@ class Atom(object):
         :param str inversion_retention_flag: Inversion/retention flag.
         :param str exact_change_flag: Exact change flag.
         """
-        self.atom_number= atom_number
+        self.atom_number = atom_number
         self.neighbors = []
         self._ctab_data = OrderedDict()
 
@@ -911,7 +1009,7 @@ class Atom(object):
         
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         if not atom_symbol:
             return self.neighbors
@@ -924,7 +1022,7 @@ class Atom(object):
         
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor carbon atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
@@ -934,7 +1032,7 @@ class Atom(object):
         
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor hydrogen atoms.
-        :rtype: :py:class:`list`
+        :rtype: :py:class:`list`.
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
 
@@ -989,6 +1087,15 @@ class Bond(object):
         self._ctab_data['not_used1'] = not_used1
         self._ctab_data['bond_topology'] = bond_topology
         self._ctab_data['reacting_center_status'] = reacting_center_status
+
+    def update_atom_numbers(self):
+        """Update links "first_atom_number" -> "second_atom_number"
+        
+        :return: None.
+        :rtype: :py:obj:`None`.
+        """
+        self._ctab_data['first_atom_number'] = self.first_atom.atom_number
+        self._ctab_data['second_atom_number'] = self.second_atom.atom_number
 
     def __getitem__(self, item):
         """Provide dict-like item access to bond ``Ctab`` data."""
