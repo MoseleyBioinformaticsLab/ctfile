@@ -39,7 +39,7 @@ from .api import Atom
 from .api import Bond
 
 
-__version__ = '0.1.6'
+__version__ = '0.1.7dev'
 
 
 try:  # Python 2/3 compatibility code
