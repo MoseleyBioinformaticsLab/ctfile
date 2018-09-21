@@ -767,6 +767,9 @@ class Molfile(CTfile):
         """
         self['Ctab'].add_charge(atom_number=atom_number, atom_symbol=atom_symbol, charge=charge)
 
+    def __bool__(self):
+        return bool(self['Ctab'])
+
 
 class SDfile(CTfile):
     """SDfile - each structure-data file contains structures and data for any number
@@ -954,6 +957,9 @@ class SDfile(CTfile):
         """
         return [entry['molfile'] for entry in self.values()]
 
+    def __bool__(self):
+        return bool(self.molfiles[0])
+
 
 class Atom(object):
     """Atom within ``Ctab`` block."""
@@ -1055,6 +1061,9 @@ class Atom(object):
     def __repr__(self):
         """Representation of atom ``Ctab`` data."""
         return str(self._ctab_data)
+
+    def __bool__(self):
+        """"""
 
 
 class Bond(object):
