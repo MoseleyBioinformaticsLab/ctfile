@@ -1062,9 +1062,6 @@ class Atom(object):
         """Representation of atom ``Ctab`` data."""
         return str(self._ctab_data)
 
-    def __bool__(self):
-        """"""
-
 
 class Bond(object):
     """Bond that connects two atoms within ``Ctab`` block."""
