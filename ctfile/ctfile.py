@@ -551,7 +551,7 @@ class Ctab(CTfile):
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
     contain disjoint fragments.
-    
+
     --------------------
     | molfile          |
     |                  |
@@ -562,6 +562,7 @@ class Molfile(CTfile):
     |                  |
     --------------------
     """
+
     def __init__(self):
         """Molfile initializer."""
 
@@ -653,7 +654,7 @@ class Molfile(CTfile):
     @property
     def positions(self):
         """List of positions of atoms in atoms block starting from 1.
-        
+
         :return: List of positions of atoms in atoms block starting from 1. 
         :rtype: :py:class:`list`.
         """
@@ -688,12 +689,23 @@ class Molfile(CTfile):
 
     def as_sdfile(self, data=None):
         """Create ``SDfile`` from ``Molfile``.
-        
+
         :param dict data: Data associated with ``Molfile``. 
         :return: New ``SDfile`` instance.
         :rtype: :class:`~ctfile.ctfile.SDfile`.
         """
         return SDfile.from_molfile(molfile=self, data=data)
+
+    def add_iso(self, atom_symbol, atom_number, isotope):
+        """
+
+        :param atom_symbol: 
+        :param atom_number: 
+        :param isotope: 
+        :return:
+        :rtype:
+        """
+        self['Ctab'].add_iso(atom_symbol=atom_symbol, atom_number=atom_number, isotope=isotope)
 
     def __bool__(self):
         return bool(self['Ctab'])
