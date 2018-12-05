@@ -696,6 +696,15 @@ class Molfile(CTfile):
         """
         return SDfile.from_molfile(molfile=self, data=data)
 
+    def atoms_by_symbol(self, atom_symbol):
+        """Access all atoms of specified type.
+
+        :param str atom_symbol: Atom symbol.
+        :return: List of atoms.
+        :rtype: :py:class:`list`.
+        """
+        return self['Ctab'].atoms_by_symbol(atom_symbol)
+
     def atom_by_number(self, atom_number):
         """Access atom by atom number.
 
