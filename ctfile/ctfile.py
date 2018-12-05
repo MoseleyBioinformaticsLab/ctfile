@@ -823,6 +823,30 @@ class Atom(object):
         """
         self._ctab_property_data[property_specifier] = str(value)
 
+    @property
+    def charge(self, property_specifier='CHG'):
+        """
+
+        :param property_specifier: 
+        :return: 
+        """
+        ctab_property_charge = self._ctab_property_data.get(property_specifier, '')
+
+        if ctab_property_charge:
+            return ctab_property_charge
+        else:
+            return self._ctab_data['charge']
+
+    @charge.setter
+    def charge(self, value, property_specifier='CHG'):
+        """
+
+        :param value: 
+        :param property_specifier: 
+        :return: 
+        """
+        self._ctab_property_data[property_specifier] = str(value)
+
     def __getitem__(self, item):
         """Provide dict-like item access to atom ``Ctab`` data."""
         return self._ctab_data[item]
