@@ -268,6 +268,7 @@ class Ctab(CTfile):
         self['CtabCountsLine'] = OrderedDict()
         self['CtabAtomBlock'] = []
         self['CtabBondBlock'] = []
+        # self['CtabPropertiesBlock'] = OrderedDict()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -450,6 +451,15 @@ class Ctab(CTfile):
         :rtype: :py:class:`list`.
         """
         return [atom for atom in self['CtabAtomBlock'] if atom['atom_symbol'] == atom_symbol]
+
+    def atom_by_number(self, atom_number):
+        """Access atom by atom number.
+
+        :param str atom_number: Atom number within ``molfile`` atoms block.
+        :return: instance of Atom object.
+        :rtype: :class:`~ctfile.ctfile.Atom`.
+        """
+        return self.atoms[int(atom_number) - 1]
 
     @property
     def carbon_atoms(self, atom_symbol='C'):
