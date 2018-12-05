@@ -707,6 +707,17 @@ class Molfile(CTfile):
         """
         self['Ctab'].add_iso(atom_symbol=atom_symbol, atom_number=atom_number, isotope=isotope)
 
+    def add_chg(self, atom_symbol, atom_number, charge):
+        """
+
+        :param atom_symbol: 
+        :param atom_number: 
+        :param charge: 
+        :return:
+        :rtype:
+        """
+        self['Ctab'].add_chg(atom_symbol=atom_symbol, atom_number=atom_number, charge=charge)
+
     def __bool__(self):
         return bool(self['Ctab'])
 
