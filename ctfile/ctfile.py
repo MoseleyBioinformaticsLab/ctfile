@@ -696,6 +696,15 @@ class Molfile(CTfile):
         """
         return SDfile.from_molfile(molfile=self, data=data)
 
+    def atom_by_number(self, atom_number):
+        """Access atom by atom number.
+
+        :param str atom_number: Atom number within ``molfile`` atoms block.
+        :return: instance of Atom object.
+        :rtype: :class:`~ctfile.ctfile.Atom`.
+        """
+        return self['Ctab'].atom_by_number(atom_number)
+
     def add_iso(self, atom_symbol, atom_number, isotope):
         """
 
