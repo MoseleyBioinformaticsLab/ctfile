@@ -7,7 +7,6 @@ ctfile.ctfile
 
 This module implements core objects to represent ``CTfile`` file format.
 """
-
 from __future__ import print_function, division, unicode_literals
 import sys
 import json
@@ -18,14 +17,13 @@ import more_itertools
 
 from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
-from .utils import OrderedCounter
 
 
 class CTfile(OrderedDict):
     """Base class to represent collection of Chemical table file (``CTfile``) 
     formats, e.g. ``Molfile``, ``SDfile``."""
 
-    ctab_properties = ctab_properties_conf
+    ctab_conf = ctab_properties_conf
 
     def __init__(self, *args, **kwargs):
         """CTfile initializer.
@@ -268,9 +266,6 @@ class Ctab(CTfile):
         self['CtabCountsLine'] = OrderedDict()
         self['CtabAtomBlock'] = []
         self['CtabBondBlock'] = []
-        self['CtabPropertiesBlock'] = OrderedDict()
-
-        self.edges = OrderedDict()
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -294,9 +289,8 @@ class Ctab(CTfile):
                 first_atom_number, second_atom_number, bond_type, bond_stereo, \
                 not_used1, bond_topology, reacting_center_status = token
 
-                first_atom = self['CtabAtomBlock'][int(first_atom_number) - 1]
-                second_atom = self['CtabAtomBlock'][int(second_atom_number) - 1]
-
+                first_atom = self.atoms[int(first_atom_number) - 1]
+                second_atom = self.atoms[int(second_atom_number) - 1]
                 first_atom.neighbors.append(second_atom)
                 second_atom.neighbors.append(first_atom)
 
@@ -307,67 +301,18 @@ class Ctab(CTfile):
 
             elif key == 'CtabPropertiesBlock':
                 property_name = token.name
-                single_entry_keys = self.ctab_properties[self.version][property_name]['values']
-                self[key].setdefault(property_name, [])
-                ctab_properties = more_itertools.sliced(token.line.split()[3:], len(single_entry_keys))
+                keys = self.ctab_conf[self.version][property_name]['values']
+                ctab_properties = more_itertools.sliced(token.line.split()[3:], len(keys))
 
                 for ctab_property in ctab_properties:
-                    self[key][property_name].append(OrderedDict(zip(single_entry_keys, ctab_property)))
+                    atom_number, property_value = ctab_property
+                    self.atoms[int(atom_number) - 1]._ctab_property_data[property_name] = property_value
 
             elif key == 'CtabBlockEnd':
                 break
 
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
-
-    def _to_ctfile(self):
-        """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
-
-        :return: `CTfile` formatted string.
-        :rtype: :py:class:`str`.
-        """
-        output = io.StringIO()
-
-        for key in self:
-
-            if key == 'CtabCountsLine':
-                counter = OrderedCounter(self.counts_line_format)
-                counts_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                       in zip(self[key].values(), counter.values())])
-                output.write(counts_line)
-                output.write('\n')
-
-            elif key == 'CtabAtomBlock':
-                counter = OrderedCounter(Atom.atom_block_format)
-                for atom in self[key]:
-                    atom_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(atom._ctab_data.values(), counter.values())])
-                    output.write(atom_line)
-                    output.write('\n')
-
-            elif key == 'CtabBondBlock':
-                counter = OrderedCounter(Bond.bond_block_format)
-                for bond in self[key]:
-                    bond_line = ''.join([str(value).rjust(spacing) for value, spacing
-                                         in zip(bond._ctab_data.values(), counter.values())])
-                    output.write(bond_line)
-                    output.write('\n')
-
-            elif key == 'CtabPropertiesBlock':
-                for property_name in self[key]:
-                    ctab_property_identifier = self.ctab_properties[self.version][property_name]['fmt']
-
-                    for entry in self[key][property_name]:
-                        ctab_property_line = '{}  {}{}'.format(ctab_property_identifier, 1, ''.join([str(value).rjust(4) for value in entry.values()]))
-                        output.write('{}'.format(ctab_property_line))
-                        output.write('\n')
-                output.write('{}'.format(self.ctab_properties[self.version]['END']['fmt']))
-                output.write('\n')
-
-            else:
-                raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
-
-        return output.getvalue()
 
     @property
     def version(self):
@@ -405,25 +350,6 @@ class Ctab(CTfile):
         """
         return [str(i) for i in range(1, len(self.atoms)+1)]
 
-    @property
-    def iso(self, property_specifier='ISO'):
-        """Return list of isotopic properties per each atom position.
-        
-        :return: List of isotopic properties per each atom position.
-        :rtype: :py:class:`list`.
-        """
-        isotopes = []
-
-        if property_specifier in self['CtabPropertiesBlock']:
-            atoms_by_position = dict(zip(self.positions, self.atoms))
-
-            for iso_property in self['CtabPropertiesBlock'][property_specifier]:
-                atom = atoms_by_position[iso_property['atom_number']]
-                isotopes.append({'atom_symbol': atom['atom_symbol'],
-                                 'isotope': iso_property['absolute_mass'],
-                                 'atom_number': iso_property['atom_number']})
-        return isotopes
-
     def atoms_by_symbol(self, atom_symbol):
         """Access all atoms of specified type.
 
@@ -452,132 +378,6 @@ class Ctab(CTfile):
         :rtype: :py:class:`list`.
         """
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
-
-    def add_ctab_property(self, ctab_property_name, values):
-        """Add new values to existing ``CtabPropertiesBlock``.
-
-        :param str ctab_property_name: Name of the ``Ctab`` property.
-        :param values: Sequence of values. 
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
-            raise ValueError('Unknown property: "{}".\n'
-                             'Available Ctab properties are: {}'.format(ctab_property_name, ", ".join('"{}"'.format(ctab_property) for ctab_property in ctab_properties_conf[self.version])))
-        else:
-            self['CtabPropertiesBlock'].setdefault(ctab_property_name, [])
-
-            single_entry_keys = self.ctab_properties[self.version][ctab_property_name]['values']
-            for value in values:
-                annotated_value = OrderedDict(zip(single_entry_keys, value))
-                if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
-                    self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
-
-    def replace_ctab_property(self, ctab_property_name, values):
-        """Replace with new values ``CtabPropertiesBlock``.
-
-        :param str ctab_property_name: Name of the ``Ctab`` property.
-        :param values: Sequence of values. 
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        if ctab_property_name.upper() not in ctab_properties_conf[self.version]:
-            raise ValueError('Unknown property: "{}".\n'
-                             'Available Ctab properties are: {}'.format(ctab_property_name, ', '.join('"{}"'.format(ctab_property) for ctab_property in ctab_properties_conf[self.version])))
-        else:
-            self['CtabPropertiesBlock'][ctab_property_name] = []
-            single_entry_keys = self.ctab_properties[self.version][ctab_property_name]['values']
-            for value in values:
-                annotated_value = OrderedDict(zip(single_entry_keys, value))
-                if annotated_value not in self['CtabPropertiesBlock'][ctab_property_name]:
-                    self['CtabPropertiesBlock'][ctab_property_name].append(annotated_value)
-
-    def add_charge(self, atom_number, atom_symbol, charge):
-        """Add charge to neutral "N", "O", or "S".
-        
-        :param str atom_number: Atom id in order of appearance in ``CTfile``.
-        :param str atom_symbol: Atom symbol.
-        :param str charge: Charge: "+1" or "-1".
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        atom = self['CtabAtomBlock'][int(atom_number)-1]
-
-        if atom.atom_symbol != atom_symbol:
-            raise ValueError('Mismatch between atom symbol and atom number.')
-
-        if atom.atom_symbol not in {'N', 'O', 'S'}:
-            raise ValueError('Cannot ionize atom: "{}"'.format(atom.atom_symbol))
-
-        if int(charge) == 1:
-            hydrogen = Atom(atom_number=str(len(self['CtabAtomBlock'])+1),
-                            atom_symbol='H',
-                            x='0.0000',
-                            y='0.0000',
-                            z='0.0000',
-                            mass_difference='0',
-                            charge='0',
-                            atom_stereo_parity='0',
-                            hydrogen_count='0',
-                            stereo_care_box='0',
-                            valence='0',
-                            h0designator='0',
-                            not_used1='0',
-                            not_used2='0',
-                            atom_atom_mapping_number='0',
-                            inversion_retention_flag='0',
-                            exact_change_flag='0')
-
-            bond = Bond(first_atom=atom,
-                        second_atom=hydrogen,
-                        bond_type='1',
-                        bond_stereo='0',
-                        not_used1='0',
-                        bond_topology='0',
-                        reacting_center_status='0')
-
-            self['CtabAtomBlock'].append(hydrogen)
-            self['CtabBondBlock'].append(bond)
-
-        elif int(charge) == -1:
-            terminal_hydrogens = atom.neighbor_hydrogen_atoms
-
-            if len(terminal_hydrogens) == 1:
-                hydrogen = terminal_hydrogens[0]
-                remove_index = []
-
-                # update atom numbers
-                for atom in self['CtabAtomBlock']:
-                    if int(atom.atom_number) > int(hydrogen.atom_number):
-                        atom.atom_number = str(int(atom.atom_number)-1)
-
-                # find index of a bond to remove and update ctab data dict with new atom numbers
-                for index, bond in enumerate(self['CtabBondBlock']):
-                    if hydrogen.atom_number in {bond.first_atom_number, bond.second_atom_number}:
-                        remove_index.append(index)
-                    bond.update_atom_numbers()
-
-                if len(remove_index) != 1:
-                    raise ValueError('Removing more than one bond! Operation is not permitted.')
-                else:
-                    # remove atom from neighbors list
-                    for atom in self['CtabAtomBlock']:
-                        if hydrogen in atom.neighbors:
-                            atom.neighbors.remove(hydrogen)
-
-                    # remove atom and bond from Ctab
-                    self['CtabAtomBlock'].pop(int(hydrogen.atom_number)-1)
-                    self['CtabBondBlock'].pop(remove_index[0])
-            else:
-                raise ValueError('Atom "{}{}" has incorrect number of terminal hydrogens.'.format(atom.atom_symbol, atom.atom_number))
-
-        else:
-            raise ValueError('Can only handle charges "+1" and "-1".')
-
-        # update atom and bond counts
-        self['CtabCountsLine']['number_of_atoms'] = str(len(self['CtabAtomBlock']))
-        self['CtabCountsLine']['number_of_bonds'] = str(len(self['CtabBondBlock']))
-        self.add_ctab_property(ctab_property_name='CHG', values=[(str(atom_number), str(charge))])
 
 
 class Molfile(CTfile):
@@ -692,15 +492,6 @@ class Molfile(CTfile):
         return self['Ctab'].positions
 
     @property
-    def iso(self):
-        """Return list of isotopic properties per each atom position.
-        
-        :return: List of isotopic properties per each atom position.
-        :rtype: :py:class:`list`.
-        """
-        return self['Ctab'].iso
-
-    @property
     def molfiles(self):
         """Create list of ``Molfile`` instances (list of 1 in this case).
 
@@ -735,37 +526,6 @@ class Molfile(CTfile):
         :rtype: :class:`~ctfile.ctfile.SDfile`.
         """
         return SDfile.from_molfile(molfile=self, data=data)
-
-    def add_ctab_property(self, ctab_property_name, values):
-        """Add new values to existing ``CtabPropertiesBlock``.
-
-        :param str ctab_property_name: Name of the ``Ctab`` property.
-        :param values: Sequence of values. 
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        self['Ctab'].add_ctab_property(ctab_property_name=ctab_property_name, values=values)
-
-    def replace_ctab_property(self, ctab_property_name, values):
-        """Replace with new values ``CtabPropertiesBlock``.
-
-        :param str ctab_property_name: Name of the ``Ctab`` property.
-        :param values: Sequence of values. 
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        self['Ctab'].replace_ctab_property(ctab_property_name=ctab_property_name, values=values)
-
-    def add_charge(self, atom_number, atom_symbol, charge):
-        """Add charge to neutral "N", "O", or "S".
-
-        :param str atom_number: Atom id in order of appearance in ``CTfile``.
-        :param str atom_symbol: Atom symbol.
-        :param str charge: Charge: "+1" or "-1".
-        :return: None.
-        :rtype: :py:obj:`None`.
-        """
-        self['Ctab'].add_charge(atom_number=atom_number, atom_symbol=atom_symbol, charge=charge)
 
     def __bool__(self):
         return bool(self['Ctab'])
