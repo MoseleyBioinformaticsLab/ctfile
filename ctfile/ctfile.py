@@ -730,7 +730,7 @@ class Atom(object):
                  hydrogen_count, stereo_care_box, valence, h0designator, not_used1, not_used2,
                  atom_atom_mapping_number, inversion_retention_flag, exact_change_flag):
         """Atom initializer.
-        
+
         :param str atom_number: Atom id in order of appearance in ``CTfile``.
         :param str atom_symbol: Atom symbol.
         :param str x: Atom x coordinate.
@@ -752,6 +752,7 @@ class Atom(object):
         self.atom_number = atom_number
         self.neighbors = []
         self._ctab_data = OrderedDict()
+        self._ctab_property_data = OrderedDict()
 
         self._ctab_data['x'] = x
         self._ctab_data['y'] = y
@@ -772,7 +773,7 @@ class Atom(object):
 
     def neighbor_atoms(self, atom_symbol=None):
         """Access neighbor atoms.
-        
+
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor atoms.
         :rtype: :py:class:`list`.
@@ -785,7 +786,7 @@ class Atom(object):
     @property
     def neighbor_carbon_atoms(self, atom_symbol='C'):
         """Access neighbor carbon atoms.
-        
+
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor carbon atoms.
         :rtype: :py:class:`list`.
@@ -795,12 +796,32 @@ class Atom(object):
     @property
     def neighbor_hydrogen_atoms(self, atom_symbol='H'):
         """Access neighbor hydrogen atoms.
-        
+
         :param str atom_symbol: Atom symbol.
         :return: List of neighbor hydrogen atoms.
         :rtype: :py:class:`list`.
         """
         return self.neighbor_atoms(atom_symbol=atom_symbol)
+
+    @property
+    def isotope(self, property_specifier='ISO'):
+        """Atom isotope
+
+        :param property_specifier: 
+        :return:
+        :rtype:
+        """
+        return self._ctab_property_data.get(property_specifier, '')
+
+    @isotope.setter
+    def isotope(self, value, property_specifier='ISO'):
+        """Atom isotope setter.
+
+        :param value: 
+        :param property_specifier: 
+        :return: 
+        """
+        self._ctab_property_data[property_specifier] = str(value)
 
     def __getitem__(self, item):
         """Provide dict-like item access to atom ``Ctab`` data."""
@@ -831,7 +852,7 @@ class Bond(object):
     def __init__(self, first_atom, second_atom, bond_type, bond_stereo,
                  not_used1, bond_topology, reacting_center_status):
         """Bond initializer.
-        
+
         :param first_atom: Atom object.
         :type first_atom: :class:`~ctfile.ctfile.Atom`
         :param second_atom: Atom object.
@@ -856,7 +877,7 @@ class Bond(object):
 
     def update_atom_numbers(self):
         """Update links "first_atom_number" -> "second_atom_number"
-        
+
         :return: None.
         :rtype: :py:obj:`None`.
         """
