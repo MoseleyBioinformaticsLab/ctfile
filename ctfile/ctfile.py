@@ -481,6 +481,21 @@ class Ctab(CTfile):
         """
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
 
+    def add_iso(self, atom_symbol, atom_number, isotope):
+        """
+
+        :param atom_symbol: 
+        :param atom_number: 
+        :param isotope: 
+        :return:
+        :rtype:
+        """
+        atom = self.atom_by_number(atom_number=atom_number)
+        if atom.atom_symbol != atom_symbol:
+            raise TypeError('Atom symbols do not match: {} and {}'.format(atom.atom_symbol, atom_symbol))
+        else:
+            atom.isotope = isotope
+
 
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
