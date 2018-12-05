@@ -496,6 +496,21 @@ class Ctab(CTfile):
         else:
             atom.isotope = isotope
 
+    def add_chg(self, atom_symbol, atom_number, charge):
+        """
+
+        :param atom_symbol: 
+        :param atom_number: 
+        :param charge: 
+        :return:
+        :rtype:
+        """
+        atom = self.atom_by_number(atom_number=atom_number)
+        if atom.atom_symbol != atom_symbol:
+            raise TypeError('Atom symbols do not match: {} and {}'.format(atom.atom_symbol, atom_symbol))
+        else:
+            atom.charge = charge
+
 
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
