@@ -511,6 +511,42 @@ class Ctab(CTfile):
         else:
             atom.charge = charge
 
+        if int(charge) < 0:
+            if len(atom.neighbor_hydrogen_atoms) < abs(int(charge)):
+                raise ValueError(
+                    'Cannot add charge {} to atom {} at position {}'.format(charge, atom_symbol, atom_number))
+            else:
+                atom_numbers = [hydrogen.atom_number for hydrogen in atom.neighbor_hydrogen_atoms]
+                self.delete_atom(*atom_numbers)
+
+    def delete_atom(self, *atom_numbers):
+        """Delete atoms by atom number.
+
+        :param str atom_numbers: 
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
+        for atom_number in atom_numbers:
+            deletion_atom = self.atom_by_number(atom_number=atom_number)
+
+            # update atom numbers
+            for atom in self.atoms:
+                if int(atom.atom_number) > int(atom_number):
+                    atom.atom_number = str(int(atom.atom_number) - 1)
+
+            # find index of a bond to remove and update ctab data dict with new atom numbers
+            for index, bond in enumerate(self.bonds):
+                bond.update_atom_numbers()
+                if atom_number in {bond.first_atom_number, bond.second_atom_number}:
+                    self.bonds.remove(bond)
+
+            # remove atom from neighbors list
+            for atom in self.atoms:
+                if deletion_atom in atom.neighbors:
+                    atom.neighbors.remove(deletion_atom)
+
+            self.atoms.remove(deletion_atom)
+
 
 class Molfile(CTfile):
     """Molfile - each molfile describes a single molecular structure which can
