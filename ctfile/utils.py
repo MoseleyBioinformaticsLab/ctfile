@@ -11,7 +11,8 @@ This module provides reusable utility functions and objects.
 from collections import OrderedDict
 from collections import Counter
 from collections import defaultdict
-import ctfile
+
+from .ctfile import Molfile
 
 
 def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
@@ -43,7 +44,7 @@ def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
     :param isotope_resolved: boolean - if true, add non-monoisotope information to d0 colors
     :param stereo_resolved: boolean - if true, add stereo information to bonds when constructing colors.
     """
-    if not isinstance(mol, ctfile.Molfile):
+    if not isinstance(mol, Molfile):
         raise Exception("can only colorize mol files")
 
     # make the isotope lookup table by atom index if there are isotopes and if the flag is set.
@@ -78,8 +79,8 @@ def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
             atom["colors"][d] = d_color
 
     # group all atoms by their colors for N = 0 to N = max_d.
+    color_groups = defaultdict(dict)
     for d in range(0, max_d):
-        color_groups = defaultdict(dict)
         for atom in mol.atoms:
             d_color = atom["colors"][d]
             if d_color not in color_groups[d]:
@@ -87,6 +88,7 @@ def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
             color_groups[d][d_color].append(atom)
     mol["color_groups"] = color_groups
     return mol
+
 
 class OrderedCounter(Counter, OrderedDict):
     """Counter that remembers the order of elements that are seen first."""
@@ -96,4 +98,3 @@ class OrderedCounter(Counter, OrderedDict):
 
     def __reduce__(self):
         return self.__class__, OrderedDict(self)
-
