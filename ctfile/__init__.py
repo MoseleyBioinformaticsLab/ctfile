@@ -28,15 +28,17 @@ This package includes the following modules:
 
 import logging
 
-from .api import load
-from .api import loadstr
 from .api import read_file
 from .api import read_files
-from .api import Ctab
-from .api import Molfile
-from .api import SDfile
-from .api import Atom
-from .api import Bond
+from .ctfile import CTfile
+from .ctfile import Molfile
+from .ctfile import SDfile
+from .ctfile import Atom
+from .ctfile import Bond
+
+
+load = CTfile.load
+loadstr = CTfile.loadstr
 
 
 __version__ = '0.1.7dev'
