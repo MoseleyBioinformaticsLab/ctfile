@@ -534,7 +534,7 @@ class Ctab(CTfile):
                 if int(atom.atom_number) > int(atom_number):
                     atom.atom_number = str(int(atom.atom_number) - 1)
 
-            # find index of a bond to remove and update ctab data dict with new atom numbers
+            # find index of a bond to remove and update Ctab data dict with new atom numbers
             for index, bond in enumerate(self.bonds):
                 bond.update_atom_numbers()
                 if atom_number in {bond.first_atom_number, bond.second_atom_number}:
