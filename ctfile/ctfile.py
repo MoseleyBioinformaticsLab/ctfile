@@ -926,6 +926,15 @@ class SDfile(CTfile):
         """
         return [entry['molfile'] for entry in self.values()]
 
+    @property
+    def sdfdata(self):
+        """Create list of ``SDfile`` data associated with ``Molfile``s.
+
+        :return: List of data.
+        :rtype: :py:class:`list`.
+        """
+        return [entry['data'] for entry in self.values()]
+
     def __bool__(self):
         return bool(self.molfiles[0])
 
