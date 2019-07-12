@@ -9,3 +9,7 @@ class SpecError(Exception):
 
 class IsotopeSpecError(SpecError):
     """Isotope specification error."""
+
+
+class ChargeSpecError(SpecError):
+    """Charge specification error."""
