@@ -501,6 +501,13 @@ class Ctab(CTfile):
                 atom_symbol))
 
     def remove_iso(self, atom_symbol, atom_number):
+        """Remove atom isotope.
+
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
         atom = self.atom_by_number(atom_number=atom_number)
         if atom.atom_symbol == atom_symbol:
             atom.isotope = ""
