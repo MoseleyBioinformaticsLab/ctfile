@@ -19,6 +19,7 @@ import more_itertools
 from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
 from .utils import OrderedCounter
+from .exceptions import IsotopeSpecError, ChargeSpecError
 
 
 class CTfile(OrderedDict):
@@ -491,10 +492,13 @@ class Ctab(CTfile):
         :rtype:
         """
         atom = self.atom_by_number(atom_number=atom_number)
-        if atom.atom_symbol != atom_symbol:
-            raise TypeError('Atom symbols do not match: {} and {}'.format(atom.atom_symbol, atom_symbol))
-        else:
+        if atom.atom_symbol == atom_symbol:
             atom.isotope = isotope
+        else:
+            raise IsotopeSpecError("Atom {} at position {} symbols do not match provided atom: {}".format(
+                atom.atom_symbol,
+                atom_number,
+                atom_symbol))
 
     def add_chg(self, atom_symbol, atom_number, charge):
         """
@@ -506,14 +510,17 @@ class Ctab(CTfile):
         :rtype:
         """
         atom = self.atom_by_number(atom_number=atom_number)
-        if atom.atom_symbol != atom_symbol:
-            raise TypeError('Atom symbols do not match: {} and {}'.format(atom.atom_symbol, atom_symbol))
-        else:
+        if atom.atom_symbol == atom_symbol:
             atom.charge = charge
+        else:
+            raise ChargeSpecError("Atom {} at position {} symbols do not match provided atom: {}".format(
+                atom.atom_symbol,
+                atom_number,
+                atom_symbol))
 
         if int(charge) < 0:
             if len(atom.neighbor_hydrogen_atoms) < abs(int(charge)):
-                raise ValueError(
+                raise ChargeSpecError(
                     'Cannot add charge {} to atom {} at position {}'.format(charge, atom_symbol, atom_number))
             else:
                 atom_numbers = [hydrogen.atom_number for hydrogen in atom.neighbor_hydrogen_atoms]
@@ -725,6 +732,16 @@ class Molfile(CTfile):
         """
         self['Ctab'].add_iso(atom_symbol=atom_symbol, atom_number=atom_number, isotope=isotope)
 
+    def remove_iso(self, atom_symbol, atom_number):
+        """
+
+        :param atom_symbol:
+        :param atom_number:
+        :return:
+        :rtype:
+        """
+        self['Ctab'].remove_iso(atom_symbol=atom_symbol, atom_number=atom_number)
+
     def add_chg(self, atom_symbol, atom_number, charge):
         """
 
@@ -735,6 +752,16 @@ class Molfile(CTfile):
         :rtype:
         """
         self['Ctab'].add_chg(atom_symbol=atom_symbol, atom_number=atom_number, charge=charge)
+
+    def remove_chg(self, atom_symbol, atom_number):
+        """
+
+        :param atom_symbol:
+        :param atom_number:
+        :return:
+        :rtype:
+        """
+        self['Ctab'].remove_chg(atom_symbol=atom_symbol, atom_number=atom_number)
 
     def __bool__(self):
         return bool(self['Ctab'])
