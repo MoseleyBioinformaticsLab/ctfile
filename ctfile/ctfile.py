@@ -570,7 +570,7 @@ class Ctab(CTfile):
                 self.delete_atom(*atom_numbers)
 
     def delete_atom(self, *atom_numbers):
-        """Delete atoms by atom number.
+        """Delete atoms by atom number(s).
 
         :param str atom_numbers: 
         :return: None.
@@ -765,44 +765,44 @@ class Molfile(CTfile):
         return self['Ctab'].atom_by_number(atom_number)
 
     def add_iso(self, atom_symbol, atom_number, isotope):
-        """
+        """Add atom isotope.
 
-        :param atom_symbol: 
-        :param atom_number: 
-        :param isotope: 
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :param str isotope: Atom isotope.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         self['Ctab'].add_iso(atom_symbol=atom_symbol, atom_number=atom_number, isotope=isotope)
 
     def remove_iso(self, atom_symbol, atom_number):
-        """
+        """Remove atom isotope.
 
-        :param atom_symbol:
-        :param atom_number:
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         self['Ctab'].remove_iso(atom_symbol=atom_symbol, atom_number=atom_number)
 
     def add_chg(self, atom_symbol, atom_number, charge):
-        """
+        """Add atom charge.
 
-        :param atom_symbol: 
-        :param atom_number: 
-        :param charge: 
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :param str charge: Atom charge.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         self['Ctab'].add_chg(atom_symbol=atom_symbol, atom_number=atom_number, charge=charge)
 
     def remove_chg(self, atom_symbol, atom_number):
-        """
+        """Remove atom charge.
 
-        :param atom_symbol:
-        :param atom_number:
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         self['Ctab'].remove_chg(atom_symbol=atom_symbol, atom_number=atom_number)
 
