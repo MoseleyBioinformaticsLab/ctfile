@@ -483,13 +483,13 @@ class Ctab(CTfile):
         return self.atoms_by_symbol(atom_symbol=atom_symbol)
 
     def add_iso(self, atom_symbol, atom_number, isotope):
-        """
+        """Add atom isotope.
 
-        :param atom_symbol: 
-        :param atom_number: 
-        :param isotope: 
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :param str isotope: Isotope number.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         atom = self.atom_by_number(atom_number=atom_number)
         if atom.atom_symbol == atom_symbol:
