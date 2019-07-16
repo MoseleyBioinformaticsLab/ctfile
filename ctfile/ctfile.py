@@ -544,6 +544,13 @@ class Ctab(CTfile):
                 self.delete_atom(*atom_numbers)
 
     def remove_chg(self, atom_symbol, atom_number):
+        """Remove atom charge.
+
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :return: None.
+        :rtype: :py:obj:`None`
+        """
         atom = self.atom_by_number(atom_number=atom_number)
         if atom.atom_symbol == atom_symbol:
             charge = atom.charge
