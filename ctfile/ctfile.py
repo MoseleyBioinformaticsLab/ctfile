@@ -487,7 +487,7 @@ class Ctab(CTfile):
 
         :param str atom_symbol: Atom symbol.
         :param str atom_number: Atom number.
-        :param str isotope: Isotope number.
+        :param str isotope: Atom isotope.
         :return: None.
         :rtype: :py:obj:`None`
         """
@@ -501,13 +501,13 @@ class Ctab(CTfile):
                 atom_symbol))
 
     def add_chg(self, atom_symbol, atom_number, charge):
-        """
+        """Add atom charge.
 
-        :param atom_symbol: 
-        :param atom_number: 
-        :param charge: 
-        :return:
-        :rtype:
+        :param str atom_symbol: Atom symbol.
+        :param str atom_number: Atom number.
+        :param str charge: Atom charge.
+        :return: None.
+        :rtype: :py:obj:`None`
         """
         atom = self.atom_by_number(atom_number=atom_number)
         if atom.atom_symbol == atom_symbol:
