@@ -543,6 +543,25 @@ class Ctab(CTfile):
                 atom_numbers = [hydrogen.atom_number for hydrogen in atom.neighbor_hydrogen_atoms]
                 self.delete_atom(*atom_numbers)
 
+    def remove_chg(self, atom_symbol, atom_number):
+        atom = self.atom_by_number(atom_number=atom_number)
+        if atom.atom_symbol == atom_symbol:
+            charge = atom.charge
+            atom.charge = 0
+        else:
+            raise ChargeSpecError("Atom {} at position {} symbols do not match provided atom: {}".format(
+                atom.atom_symbol,
+                atom_number,
+                atom_symbol))
+
+        if int(charge) > 0:
+            if len(atom.neighbor_hydrogen_atoms) < abs(int(charge)):
+                raise ChargeSpecError(
+                    "Cannot remove charge {} to atom {} at position {}".format(charge, atom_symbol, atom_number))
+            else:
+                atom_numbers = [hydrogen.atom_number for hydrogen in atom.neighbor_hydrogen_atoms]
+                self.delete_atom(*atom_numbers)
+
     def delete_atom(self, *atom_numbers):
         """Delete atoms by atom number.
 
