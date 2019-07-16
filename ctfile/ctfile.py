@@ -500,6 +500,16 @@ class Ctab(CTfile):
                 atom_number,
                 atom_symbol))
 
+    def remove_iso(self, atom_symbol, atom_number):
+        atom = self.atom_by_number(atom_number=atom_number)
+        if atom.atom_symbol == atom_symbol:
+            atom.isotope = ""
+        else:
+            raise IsotopeSpecError("Atom {} at position {} symbols do not match provided atom: {}".format(
+                atom.atom_symbol,
+                atom_number,
+                atom_symbol))
+
     def add_chg(self, atom_symbol, atom_number, charge):
         """Add atom charge.
 
