@@ -12,13 +12,11 @@ from collections import OrderedDict
 from collections import Counter
 from collections import defaultdict
 
-from .ctfile import Molfile
+from . import ctfile
 
 
-def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
-    """
-
-    This is an improved implementation of the coloring from CASS, see doi:10.3389/fgene.2014.00237
+def d_colorize_mol(molfile, max_d, isotope_resolved=True, stereo_resolved=True):
+    """This is an improved implementation of the coloring from CASS, see doi:10.3389/fgene.2014.00237
 
     Every node in a graph can be assigned one or more 'd' colors which represent the local substructure
     around that node out to d edges away. The d color of a node can be expressed as a combination of the
@@ -39,33 +37,38 @@ def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
     This function will add a 'color' field to every atom in a mol file object and a 'color_groups' field
     to the mol file. The color_groups represent the sets of atoms with identical dN colors.
 
-    :param mol: a molfile object from ctfile
-    :param max_d: integer - the maximum d out to which to color
-    :param isotope_resolved: boolean - if true, add non-monoisotope information to d0 colors
-    :param stereo_resolved: boolean - if true, add stereo information to bonds when constructing colors.
+    :param molfile:  `Molfile` object.
+    :type molfile: :class:`~ctfile.ctfile.Molfile`
+    :param int max_d: The maximum d out to which to color.
+    :param isotope_resolved: If true, add non-monoisotope information to d0 colors.
+    :type isotope_resolved: :py:obj:`True` or :py:obj:`False`.
+    :param stereo_resolved: If true, add stereo information to bonds when constructing colors.
+    :type stereo_resolved: :py:obj:`True` or :py:obj:`False`.
+    :return: Colorized `Molfile`.
+    :rtype: :class:`~ctfile.ctfile.Molfile`
     """
-    if not isinstance(mol, Molfile):
-        raise Exception("can only colorize mol files")
+    if not isinstance(molfile, ctfile.Molfile):
+        raise TypeError('Can only colorize files of type: {}'.format(type(ctfile.Molfile)))
 
     # make the isotope lookup table by atom index if there are isotopes and if the flag is set.
-    if 'ISO' in mol['Ctab']['CtabPropertiesBlock'] and isotope_resolved:
-        isotope_lookup = {entry['atom_number'] : entry['absolute_mass'] for entry in mol['Ctab']['CtabPropertiesBlock']['ISO']}
+    if 'ISO' in molfile['Ctab']['CtabPropertiesBlock'] and isotope_resolved:
+        isotope_lookup = {entry['atom_number'] : entry['absolute_mass'] for entry in molfile['Ctab']['CtabPropertiesBlock']['ISO']}
     else:
         isotope_lookup = {}
 
     bond_lookup = {}
-    for bond in mol.bonds:
+    for bond in molfile.bonds:
         bond_lookup[(bond['first_atom_number'], bond['second_atom_number'])] = bond
         bond_lookup[(bond['second_atom_number'], bond['first_atom_number'])] = bond
 
     # make the base d0 color for every atom
-    for index, atom in enumerate(mol.atoms):
+    for index, atom in enumerate(molfile.atoms):
         d0_color = isotope_lookup[index] + atom["atom_symbol"] + atom["charge"] if index in isotope_lookup else atom["atom_symbol"] + atom["charge"]
         atom["colors"] = {0: d0_color}
 
     # now make the dN color for N = 1 to max_d
     for d in range(1, max_d):
-        for n, atom in enumerate(mol.atoms):
+        for n, atom in enumerate(molfile.atoms):
             color_components = []
             for neighbor in atom.neighbors:
                 connecting_bond = bond_lookup[(neighbor.atom_number, atom.atom_number)]
@@ -81,13 +84,13 @@ def d_colorize_mol(mol, max_d, isotope_resolved=True, stereo_resolved=True):
     # group all atoms by their colors for N = 0 to N = max_d.
     color_groups = defaultdict(dict)
     for d in range(0, max_d):
-        for atom in mol.atoms:
+        for atom in molfile.atoms:
             d_color = atom["colors"][d]
             if d_color not in color_groups[d]:
                 color_groups[d][d_color] = []
             color_groups[d][d_color].append(atom)
-    mol["color_groups"] = color_groups
-    return mol
+    molfile["color_groups"] = color_groups
+    return molfile
 
 
 class OrderedCounter(Counter, OrderedDict):
