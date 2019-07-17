@@ -3,6 +3,15 @@
 Release History
 ===============
 
+0.1.7 (2019-07-17)
+~~~~~~~~~~~~~~~~~~
+
+**Improvements**
+
+- Added methods to add/remove isotope property of atoms.
+- Added methods to add/remove charge property of atoms.
+- Add atom coloring algorithm.
+
 
 0.1.6 (2018-08-20)
 ~~~~~~~~~~~~~~~~~~
