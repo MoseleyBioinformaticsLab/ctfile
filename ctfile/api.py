@@ -16,7 +16,6 @@ from .ctfile import SDfile
 from .ctfile import Atom
 from .ctfile import Bond
 
-
 load = CTfile.load
 loadstr = CTfile.loadstr
 
@@ -24,7 +23,9 @@ loadstr = CTfile.loadstr
 def read_file(path, verbose=False):
     """Read single ``CTfile`` formatted file.
     
-    :param str path: Path to ``CTfile``. 
+    :param str path: Path to ``CTfile``.
+    :param verbose: Print what files are processing.
+    :type verbose: :py:obj:`True` or :py:obj:`False`.
     :return: Subclass of :class:`~ctfile.ctfile.CTfile`.
     :rtype: :class:`~ctfile.ctfile.CTfile`
     """
@@ -35,7 +36,9 @@ def read_file(path, verbose=False):
 def read_files(path, verbose=True):
     """Read multiple ``CTfile`` formatted files.
     
-    :param str path: Path to ``CTfile``. 
+    :param str path: Path to ``CTfile``.
+    :param verbose: Print what files are processing.
+    :type verbose: :py:obj:`True` or :py:obj:`False`.
     :return: Subclass of :class:`~ctfile.ctfile.CTfile`.
     :rtype: :class:`~ctfile.ctfile.CTfile`
     """
