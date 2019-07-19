@@ -3,6 +3,14 @@
 Release History
 ===============
 
+0.1.8 (2019-07-19)
+~~~~~~~~~~~~~~~~~~
+
+**Bugfixes**
+
+- Fixed circular import issue in utils module.
+
+
 0.1.7 (2019-07-17)
 ~~~~~~~~~~~~~~~~~~
 
