@@ -115,13 +115,13 @@ def _ctab(stream):
 
     number_of_atoms = ctab_counts_line.number_of_atoms
     number_of_bonds = ctab_counts_line.number_of_bonds
-
+    
     # yield from _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream)
-    for token in _ctab_atom_bond_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream):
+    for token in _ctab_atom_block(number_of_lines=number_of_atoms, block_type=CtabAtomBlockLine, stream=stream):
         yield token
 
     # yield from _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream)
-    for token in _ctab_atom_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream):
+    for token in _ctab_bond_block(number_of_lines=number_of_bonds, block_type=CtabBondBlockLine, stream=stream):
         yield token
 
     # yield from _ctab_property_block(stream=stream)
@@ -131,20 +131,44 @@ def _ctab(stream):
     yield CtabBlockEnd()
 
 
-def _ctab_atom_bond_block(number_of_lines, block_type, stream):
-    """Process atom and bond blocks of ``Ctab``.
+def _ctab_atom_block(number_of_lines, block_type, stream):
+    """Process atom blocks of ``Ctab``.
 
     :param number_of_lines: Number of lines to process from stream.
     :param block_type: :py:class:`collections.namedtuple` to use for data processing.
-    :type block_type: :class:`~ctfile.tokenizer.CtabAtomBlockLine` or :class:`~ctfile.tokenizer.CtabBondBlockLine`
+    :type block_type: :class:`~ctfile.tokenizer.CtabAtomBlockLine`
     :param stream: Queue containing lines of text.
     :type stream: :py:class:`collections.deque`
     :return: Tuples of data.
-    :rtype: :class:`~ctfile.tokenizer.CtabAtomBlockLine` or :class:`~ctfile.tokenizer.CtabBondBlockLine`
+    :rtype: :class:`~ctfile.tokenizer.CtabAtomBlockLine`
     """
     for _ in range(int(number_of_lines)):
         line = stream.popleft()
-        yield block_type(*line.split())
+        x, y, z = line[:10].strip(), line[10:20].strip(), line[20: 30].strip()
+        atom_symbol = line[30:34].strip()
+        mass_difference = line[34:36].strip()
+        left = [line[i:i+3].strip() for i in range(36, 69, 3)]
+        left = [item if item != "" else "0" for item in left]
+        parameters = [x, y, z, atom_symbol, mass_difference] + left
+        yield block_type(*parameters)
+
+
+def _ctab_bond_block(number_of_lines, block_type, stream):
+    """Process bond blocks of ``Ctab``.
+        '111222tttsssxxxrrrccc'
+    :param number_of_lines: Number of lines to process from stream.
+    :param block_type: :py:class:`collections.namedtuple` to use for data processing.
+    :type block_type: :class:`~ctfile.tokenizer.CtabBondBlockLine`
+    :param stream: Queue containing lines of text.
+    :type stream: :py:class:`collections.deque`
+    :return: Tuples of data.
+    :rtype: :class:`~ctfile.tokenizer.CtabBondBlockLine`
+    """
+    for _ in range(int(number_of_lines)):
+        line = stream.popleft()
+        line_values = [line[i:i + 3].strip() for i in range(0, 21, 3)]
+        line_values = [item if item != "" else "0" for item in line_values]
+        yield block_type(*line_values)
 
 
 def _ctab_property_block(stream):
@@ -157,8 +181,13 @@ def _ctab_property_block(stream):
     """
     line = stream.popleft()
     while line != 'M  END':
-        name = line.split()[1]
-        yield CtabPropertiesBlockLine(name, line)
+    
+        tokens = line.split()
+        if len(tokens) > 1:
+            name = tokens[1]
+            yield CtabPropertiesBlockLine(name, line)
+        else:
+            yield CtabPropertiesBlockLine(line, line)
         line = stream.popleft()
 
 

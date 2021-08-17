@@ -18,8 +18,10 @@ import more_itertools
 
 from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
+from .conf import charge_index
 from .utils import OrderedCounter
 from .exceptions import IsotopeSpecError, ChargeSpecError
+import jsonpickle
 
 
 class CTfile(OrderedDict):
@@ -27,6 +29,7 @@ class CTfile(OrderedDict):
     formats, e.g. ``Molfile``, ``SDfile``."""
 
     ctab_conf = ctab_properties_conf
+    charge_index = charge_index
 
     def __init__(self, *args, **kwargs):
         """CTfile initializer.
@@ -133,7 +136,13 @@ class CTfile(OrderedDict):
         :return: ``JSON`` formatted string.
         :rtype: :py:class:`str`.
         """
+        # jsonpickle.set_encoder_options('json', sort_keys=True, indent=4)
+        # return jsonpickle.encode(self)
         return json.dumps(self, sort_keys=sort_keys, indent=indent, cls=CtabAtomBondEncoder)
+    
+    def _to_molfile(self):
+
+        return to_string(self)
 
     def _to_ctfile(self):
         """Convert :class:`~ctfile.ctfile.CTfile` into `CTfile` formatted string.
@@ -269,7 +278,7 @@ class Ctab(CTfile):
         self['CtabCountsLine'] = OrderedDict()
         self['CtabAtomBlock'] = []
         self['CtabBondBlock'] = []
-        # self['CtabPropertiesBlock'] = OrderedDict()
+        self['CtabPropertiesBlock'] = []
 
     def _build(self, lexer):
         """Build :class:`~ctfile.ctfile.Ctab` instance.
@@ -277,7 +286,7 @@ class Ctab(CTfile):
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`.
         """
-        atom_number = 1
+        atom_number = 0
         while True:
             token = next(lexer)
             key = token.__class__.__name__
@@ -290,8 +299,7 @@ class Ctab(CTfile):
                 atom_number += 1
 
             elif key == 'CtabBondBlock':
-                first_atom_number, second_atom_number, bond_type, bond_stereo, \
-                not_used1, bond_topology, reacting_center_status = token
+                first_atom_number, second_atom_number, bond_type, bond_stereo, not_used1, bond_topology, reacting_center_status = token
 
                 first_atom = self.atoms[int(first_atom_number) - 1]
                 second_atom = self.atoms[int(second_atom_number) - 1]
@@ -305,13 +313,28 @@ class Ctab(CTfile):
 
             elif key == 'CtabPropertiesBlock':
                 property_name = token.name
-                keys = self.ctab_conf[self.version][property_name]['values']
-                ctab_properties = more_itertools.sliced(token.line.split()[3:], len(keys))
+                self['CtabPropertiesBlock'].append(token.line)
 
-                for ctab_property in ctab_properties:
-                    atom_number, property_value = ctab_property
-                    self.atoms[int(atom_number) - 1]._ctab_property_data[property_name] = property_value
+                if property_name in self.ctab_conf[self.version]:
+                    keys = self.ctab_conf[self.version][property_name]['values']
+                    atom_property = keys[1]
+                    ctab_properties = more_itertools.sliced(token.line.split()[3:], len(keys))
+                    for ctab_property in ctab_properties:
+                        atom_number, property_value = ctab_property
 
+                        if atom_property != "charge":
+                            updatedValue = self.ctab_conf[self.version][property_name]["additional_information"] + property_value
+                        else:
+                            if property_value in charge_index:
+                                updatedValue = charge_index[property_value]
+                            else:
+                                updatedValue = property_value
+                        
+                        if atom_property in self.atoms[int(atom_number) - 1]._ctab_data:
+                            self.atoms[int(atom_number) - 1]._ctab_data[atom_property] = updatedValue
+                        else:
+                            self.atoms[int(atom_number) - 1]._ctab_property_data[atom_property] = updatedValue
+                        
             elif key == 'CtabBlockEnd':
                 break
 
@@ -325,6 +348,7 @@ class Ctab(CTfile):
         :rtype: :py:class:`str`.
         """
         output = io.StringIO()
+
         for key in self:
             if key == 'CtabCountsLine':
                 output.write(self._to_ctfile_counts_line(key=key))
@@ -335,10 +359,13 @@ class Ctab(CTfile):
             elif key == 'CtabBondBlock':
                 output.write(self._to_ctfile_bond_block(key=key))
 
+            elif key == 'CtabPropertiesBlock':
+                if self['CtabPropertiesBlock']:
+                    output.write(self._to_ctfile_property_block())
+            
             else:
                 raise KeyError('Ctab object does not supposed to have any other information: "{}".'.format(key))
 
-        output.write(self._to_ctfile_property_block())
         output.write(self.ctab_conf[self.version]['END']['fmt'])
         output.write('\n')
 
@@ -384,29 +411,40 @@ class Ctab(CTfile):
                                      for bond in self[key]])
         return '{}\n'.format(ctab_bond_block)
 
+
     def _to_ctfile_property_block(self):
+        
         """Create ctab properties block in `CTfile` format from atom-specific properties.
-
-        :return: Ctab property block.
-        :rtype: :py:class:`str`
+        : return: Ctab property block.
+        : rtype: :py:class:`str`
         """
-        ctab_properties_data = defaultdict(list)
-        for atom in self.atoms:
-            for ctab_property_key, ctab_property_value in atom._ctab_property_data.items():
-                ctab_properties_data[ctab_property_key].append(OrderedDict(
-                    zip(self.ctab_conf[self.version][ctab_property_key]['values'],
-                        [atom.atom_number, ctab_property_value])))
 
-        ctab_property_lines = []
-        for ctab_property_key, ctab_property_value in ctab_properties_data.items():
-            for entry in ctab_property_value:
-                ctab_property_line = '{}  {}{}'.format(self.ctab_conf[self.version][ctab_property_key]['fmt'],
-                                                       1, ''.join([str(value).rjust(4) for value in entry.values()]))
-                ctab_property_lines.append(ctab_property_line)
+        return '{}\n'.format('\n'.join(self['CtabPropertiesBlock']))
 
-        if ctab_property_lines:
-            return '{}\n'.format('\n'.join(ctab_property_lines))
-        return ''
+
+    #def _to_ctfile_property_block(self):
+    #    """Create ctab properties block in `CTfile` format from atom-specific properties.
+
+    #    :return: Ctab property block.
+    #    :rtype: :py:class:`str`
+    #    """
+    #    ctab_properties_data = defaultdict(list)
+    #    for atom in self.atoms:
+    #        for ctab_property_key, ctab_property_value in atom._ctab_property_data.items():
+    #            ctab_properties_data[ctab_property_key].append(OrderedDict(
+    #                zip(self.ctab_conf[self.version][ctab_property_key]['values'],
+    #                    [atom.atom_number, ctab_property_value])))
+
+    #    ctab_property_lines = []
+    #    for ctab_property_key, ctab_property_value in ctab_properties_data.items():
+    #        for entry in ctab_property_value:
+    #            ctab_property_line = '{}  {}{}'.format(self.ctab_conf[self.version][ctab_property_key]['fmt'],
+    #                                                   1, ''.join([str(value).rjust(4) for value in entry.values()]))
+    #            ctab_property_lines.append(ctab_property_line)
+
+    #    if ctab_property_lines:
+    #        return '{}\n'.format('\n'.join(ctab_property_lines))
+    #    return ''
 
     @property
     def version(self):
@@ -1041,7 +1079,7 @@ class Atom(object):
         self.neighbors = []
         self._ctab_data = OrderedDict()
         self._ctab_property_data = OrderedDict()
-
+        
         self._ctab_data['x'] = x
         self._ctab_data['y'] = y
         self._ctab_data['z'] = z
@@ -1108,6 +1146,24 @@ class Atom(object):
         :param value: 
         :param property_specifier: 
         :return: 
+        """
+        self._ctab_property_data[property_specifier] = str(value)
+
+    @property
+    def atom_symbol(self):
+        """
+
+        :return:
+        """
+        
+        return self._ctab_data["atom_symbol"]
+
+    @atom_symbol.setter
+    def atom_symbol(self, value, property_specifier):
+        """Group atom setter
+        :param value:
+        :param property_specifier:
+        :return:
         """
         self._ctab_property_data[property_specifier] = str(value)
 
@@ -1228,7 +1284,18 @@ class CtabAtomBondEncoder(json.JSONEncoder):
         :return: Dictionary that contains information required for atom and bond block of ``Ctab``.
         :rtype: :py:class:`collections.OrderedDict`
         """
-        if isinstance(o, Atom) or isinstance(o, Bond):
+        if isinstance(o, Atom):
+            if o._ctab_property_data:
+                o._ctab_data.update(o._ctab_property_data)
+                return o._ctab_data
+            else:
+                return o._ctab_data
+        elif isinstance(o, Bond):
             return o._ctab_data
-        else:
+        elif isinstance(o, dict):
             return o.__dict__
+
+
+
+
+
