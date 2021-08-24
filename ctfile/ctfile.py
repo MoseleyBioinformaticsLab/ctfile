@@ -19,6 +19,7 @@ import more_itertools
 from .tokenizer import tokenizer
 from .conf import ctab_properties_conf
 from .conf import charge_index
+from .conf import index_charge
 from .utils import OrderedCounter
 from .exceptions import IsotopeSpecError, ChargeSpecError
 import jsonpickle
@@ -30,6 +31,7 @@ class CTfile(OrderedDict):
 
     ctab_conf = ctab_properties_conf
     charge_index = charge_index
+    index_charge = index_charge
 
     def __init__(self, *args, **kwargs):
         """CTfile initializer.
@@ -321,20 +323,10 @@ class Ctab(CTfile):
                     ctab_properties = more_itertools.sliced(token.line.split()[3:], len(keys))
                     for ctab_property in ctab_properties:
                         atom_number, property_value = ctab_property
+                        if atom_property == "charge" and property_value in charge_index:
+                            self.atoms[int(atom_number) - 1]._ctab_data[atom_property] = charge_index[property_value]
+                        self.atoms[int(atom_number) - 1]._ctab_property_data[property_name] = property_value
 
-                        if atom_property != "charge":
-                            updatedValue = self.ctab_conf[self.version][property_name]["additional_information"] + property_value
-                        else:
-                            if property_value in charge_index:
-                                updatedValue = charge_index[property_value]
-                            else:
-                                updatedValue = property_value
-                        
-                        if atom_property in self.atoms[int(atom_number) - 1]._ctab_data:
-                            self.atoms[int(atom_number) - 1]._ctab_data[atom_property] = updatedValue
-                        else:
-                            self.atoms[int(atom_number) - 1]._ctab_property_data[atom_property] = updatedValue
-                        
             elif key == 'CtabBlockEnd':
                 break
 
@@ -1135,7 +1127,7 @@ class Atom(object):
 
         :param property_specifier: 
         :return:
-        :rtype:
+        :rtype:i
         """
         return self._ctab_property_data.get(property_specifier, '')
 
@@ -1179,7 +1171,7 @@ class Atom(object):
         if ctab_property_charge:
             return ctab_property_charge
         else:
-            return self._ctab_data['charge']
+            return index_charge[self._ctab_data['charge']]
 
     @charge.setter
     def charge(self, value, property_specifier='CHG'):

@@ -5,17 +5,7 @@
             "fmt": "M  ISO",
             "max_entries_per_line": "8",
             "default_entries_per_line": "1",
-            "additional_information": "",
 	    "values": ["atom_number", "absolute_mass"]
-        },
-
-        "RGP": {
-            "description": "R groups",
-            "fmt": "M  RGP",
-            "max_entries_per_line": "32",
-            "default_entries_per_line": "1",
-	    "additional_information": "R",
-            "values": ["atom_number", "atom_symbol"]
         },
 
         "CHG": {
@@ -23,7 +13,6 @@
             "fmt": "M  CHG",
             "max_entries_per_line": "8",
             "default_entries_per_line": "1",
-	    "additional_information": "",
             "values": ["atom_number", "charge"]
         },
 
@@ -31,7 +20,6 @@
             "description": "radical",
             "fmt": "M  RAD",
             "max_entries_per_line": "8",
-	    "additional_information": "",
             "default_entries_per_line": "1",
             "values": ["atom_number", "radical"]
         },
@@ -40,7 +28,6 @@
             "description": "last line in properties block",
             "fmt": "M  END",
             "max_entries_per_line": null,
-	    "additional_information": "",
             "default_entries_per_line": null,
             "values": null
         }
