@@ -41,7 +41,7 @@ load = CTfile.load
 loadstr = CTfile.loadstr
 
 
-__version__ = '0.1.9'
+__version__ = '0.1.10'
 
 
 try:  # Python 2/3 compatibility code
