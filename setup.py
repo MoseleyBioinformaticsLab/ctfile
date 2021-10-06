@@ -37,8 +37,8 @@ REQUIRES = [
 setup(
     name='ctfile',
     version=find_version(),
-    author='Andrey Smelter', 'Huan Jin',
-    author_email='andrey.smelter@gmail.com', 'jinhuan0905@gmail.com',
+    author='Andrey Smelter, Huan Jin',
+    author_email='andrey.smelter@gmail.com, jinhuan0905@gmail.com',
     description='Parser for chemical table file (CTfile) a family of text-based chemical file formats '
                 '(e.g. Molfile, SDfile) that describe molecules and chemical reactions.',
     keywords='CTfile SDfile Molfile Ctab',
