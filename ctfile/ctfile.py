@@ -288,7 +288,7 @@ class Ctab(CTfile):
         :return: :class:`~ctfile.ctfile.Ctab` instance.
         :rtype: :class:`~ctfile.ctfile.Ctab`.
         """
-        atom_number = 0
+        atom_number = 1
         while True:
             token = next(lexer)
             key = token.__class__.__name__
