@@ -57,9 +57,10 @@ class CTfile(OrderedDict):
         :param str string: String containing data in ``CTfile`` format.
         :return: Instance of ``CTfile``.
         """
+
         try:
             string = string.decode('utf-8')
-        except AttributeError:
+        except AttributeError as err:
             pass
 
         lexer = tokenizer(string)
@@ -658,7 +659,6 @@ class Molfile(CTfile):
         """
         key = ''
         while key != 'EndOfFile':
-
             token = next(lexer)
             key = token.__class__.__name__
 
@@ -720,6 +720,7 @@ class Molfile(CTfile):
         :return: List of atoms.
         :rtype: :py:class:`list`.
         """
+        # print(self['Ctab'])
         return self['Ctab'].atoms
 
     @property
